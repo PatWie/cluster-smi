@@ -5,6 +5,7 @@ import (
 	"github.com/vmihailenco/msgpack"
 	"log"
 	"sort"
+	"time"
 )
 
 func main() {
@@ -20,6 +21,7 @@ func main() {
 	subscriber.SetSubscribe("")
 
 	for {
+	//for _ = range time.Tick(2 * time.Second) {
 		s, err := subscriber.RecvBytes(0)
 		if err != nil {
 			log.Println(err)
@@ -30,6 +32,7 @@ func main() {
 		err = msgpack.Unmarshal(s, &cluster)
 		sort.Sort(ByName(cluster.Nodes))
 		cluster.print()
+		time.Sleep(2 * time.Second)
 	}
 
 }
