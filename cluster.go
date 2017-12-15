@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/olekukonko/tablewriter"
+	"github.com/apcera/termtables"
 	"github.com/patwie/nvidia_exporter/nvml"
 	"os"
 	"strconv"
@@ -16,26 +16,38 @@ func (c *Cluster) update() {
 }
 
 func (c *Cluster) print() {
-	table := tablewriter.NewWriter(os.Stdout)
-	table.SetHeader([]string{"Node", "Gpu", "Memory-Usage", "Mem-Util", "GPU-Util"})
-	for _, n := range c.Nodes {
-		for _, d := range n.Devices {
+
+	table := termtables.CreateTable()
+
+	table.AddHeaders("Node", "Gpu", "Memory-Usage", "Mem-Util", "GPU-Util")
+
+	for n_id, n := range c.Nodes {
+		for d_id, d := range n.Devices {
 			memPercent := int(d.MemoryUtilization.Used * 100 / d.MemoryUtilization.Total)
-			table.Append([]string{
-				n.Name,
-				strconv.Itoa(d.Id) + ": " + d.Name,
-				strconv.FormatInt(d.MemoryUtilization.Used/1024/1024, 10) +
-					"MiB / " +
-					strconv.FormatInt(d.MemoryUtilization.Total/1024/1024, 10) + "MiB",
-				strconv.Itoa(memPercent) + "%",
-				strconv.Itoa(d.Utilization) + "%",
-			})
+
+			name := ""
+			if d_id == 0 {
+				name = n.Name
+			}
+
+			table.AddRow(
+				name,
+				strconv.Itoa(d.Id)+": "+d.Name,
+				strconv.FormatInt(d.MemoryUtilization.Used/1024/1024, 10)+
+					"MiB / "+
+					strconv.FormatInt(d.MemoryUtilization.Total/1024/1024, 10)+"MiB",
+				strconv.Itoa(memPercent)+"%",
+				strconv.Itoa(d.Utilization)+"%",
+			)
+			table.SetAlign(termtables.AlignRight, 3)
+
+		}
+		if n_id < len(c.Nodes)-1 {
+			table.AddSeparator()
 		}
 	}
-	// table.SetAutoMergeCells(true)
-	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	fmt.Printf("\033[2J")
-	table.Render()
+	fmt.Println(table.Render())
 }
 
 // Node
