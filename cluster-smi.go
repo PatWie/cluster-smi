@@ -32,7 +32,7 @@ func main() {
 		err = msgpack.Unmarshal(s, &cluster)
 		sort.Sort(ByName(cluster.Nodes))
 		cluster.print()
-		time.Sleep(2 * time.Second)
+		time.Sleep(time.Second)
 	}
 
 }
