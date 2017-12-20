@@ -15,7 +15,7 @@ func main() {
 
 	// incoming messages
 	SocketAddr := "tcp://" + "*" + ":" + NodePort
-	log.Printf("Open socket on %v\n", SocketAddr)
+	log.Println("Now listening on", SocketAddr)
 	node_socket, err := zmq4.NewSocket(zmq4.PULL)
 	if err != nil {
 		panic(err)
@@ -25,7 +25,7 @@ func main() {
 
 	// outgoing messages
 	SocketAddr = "tcp://" + "*" + ":" + ClientPort
-	log.Printf("Open socket on %v\n", SocketAddr)
+	log.Println("Now publishing to", SocketAddr)
 	publisher, err := zmq4.NewSocket(zmq4.PUB)
 	if err != nil {
 		panic(err)
@@ -34,7 +34,7 @@ func main() {
 	publisher.Bind(SocketAddr)
 
 	// message loop
-	log.Println("Start loop")
+	log.Println("Cluster-SMI-Server is active. Press CTRL+C to shut down.")
 	for {
 		// read node information
 		s, err := node_socket.RecvBytes(0)
@@ -68,3 +68,4 @@ func main() {
 	}
 
 }
+

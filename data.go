@@ -1,16 +1,11 @@
 package main
 
-import (
-	"strings"
-)
-
 type ByName []Node
 
 func (a ByName) Len() int      { return len(a) }
 func (a ByName) Swap(i, j int) { a[i], a[j] = a[j], a[i] }
 func (a ByName) Less(i, j int) bool {
-	// return len(a[i].Name) < len(a[j].Name)
-	return strings.Compare(a[i].Name, a[j].Name) < 0
+	return a[i].Name < a[j].Name
 }
 
 type Memory struct {
