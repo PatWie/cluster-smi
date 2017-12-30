@@ -9,9 +9,9 @@ import (
 )
 
 // Cluster
-func (c *Cluster) update() {
+func (c *Cluster) fetch() {
 	for i, _ := range c.Nodes {
-		c.Nodes[i].update()
+		c.Nodes[i].fetch()
 	}
 }
 
@@ -71,7 +71,7 @@ func (n *Node) print() {
 	}
 }
 
-func (n *Node) update() {
+func (n *Node) fetch() {
 
 	devices, _ := nvml.GetDevices()
 

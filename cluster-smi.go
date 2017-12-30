@@ -19,9 +19,9 @@ func main() {
 	subscriber.Connect(SocketAddr)
 	subscriber.SetLinger(0)
 	subscriber.SetSubscribe("")
+	// subscriber.SetRcvhwm(1)
 
 	for {
-	//for _ = range time.Tick(2 * time.Second) {
 		s, err := subscriber.RecvBytes(0)
 		if err != nil {
 			log.Println(err)
@@ -32,7 +32,8 @@ func main() {
 		err = msgpack.Unmarshal(s, &cluster)
 		sort.Sort(ByName(cluster.Nodes))
 		cluster.print()
-		time.Sleep(2 * time.Second)
+
+		time.Sleep(Tick)
 	}
 
 }
