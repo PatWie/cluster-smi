@@ -15,6 +15,7 @@ func main() {
 		panic(err)
 	}
 	defer subscriber.Close()
+
 	SocketAddr := "tcp://" + Addr + ":" + ClientPort
 	subscriber.Connect(SocketAddr)
 	subscriber.SetLinger(0)
@@ -32,7 +33,6 @@ func main() {
 		err = msgpack.Unmarshal(s, &cluster)
 		sort.Sort(ByName(cluster.Nodes))
 		cluster.print()
-
 		time.Sleep(Tick)
 	}
 

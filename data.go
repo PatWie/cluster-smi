@@ -1,9 +1,5 @@
 package main
 
-import (
-	"strings"
-)
-
 type ByName []Node
 
 func (a ByName) Len() int      { return len(a) }

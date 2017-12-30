@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/apcera/termtables"
-	"github.com/patwie/nvidia_exporter/nvml"
+	"github.com/patwie/cluster-smi/nvml"
 	"os"
 	"strconv"
 )
