@@ -5,7 +5,7 @@ The same as `nvidia-smi` but for multiple machines at the same time.
 <p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
 
 ## install
-- edit const.go
+- edit `cluster-smi.yml` (is required by all parts)
 - start `cluster-smi-node` at different machines
 - start `cluster-smi-server` at a specific machine
 - use `cluster-smi` like `nvidia-smi`
