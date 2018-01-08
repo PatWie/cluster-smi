@@ -13,8 +13,11 @@ var allNodes map[string]Node
 func main() {
 	allNodes = make(map[string]Node)
 
-	// incoming messages
-	SocketAddr := "tcp://" + "*" + ":" + NodePort
+	var cfg Config
+	cfg.ReadConfig("cluster-smi.yml")
+
+	// incoming messages (Push-Pull)
+	SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortGather
 	log.Println("Now listening on", SocketAddr)
 	node_socket, err := zmq4.NewSocket(zmq4.PULL)
 	if err != nil {
@@ -23,8 +26,8 @@ func main() {
 	defer node_socket.Close()
 	node_socket.Bind(SocketAddr)
 
-	// outgoing messages
-	SocketAddr = "tcp://" + "*" + ":" + ClientPort
+	// outgoing messages (Pub-Sub)
+	SocketAddr = "tcp://" + "*" + ":" + cfg.ServerPortDistribute
 	log.Println("Now publishing to", SocketAddr)
 	publisher, err := zmq4.NewSocket(zmq4.PUB)
 	if err != nil {
@@ -46,11 +49,8 @@ func main() {
 		var node Node
 		err = msgpack.Unmarshal(s, &node)
 		if err != nil {
-			panic(err)
-		}
-
-		if err != nil {
 			log.Println(err)
+			// panic(err)
 			continue
 		}
 
@@ -71,4 +71,3 @@ func main() {
 	}
 
 }
-

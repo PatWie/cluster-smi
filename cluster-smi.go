@@ -10,13 +10,18 @@ import (
 
 func main() {
 
+	var cfg Config
+	cfg.ReadConfig("cluster-smi.yml")
+
 	subscriber, err := zmq4.NewSocket(zmq4.SUB)
 	if err != nil {
+		log.Fatalf("Failed open Socket ZMQ: %s\n", err.Error())
 		panic(err)
 	}
 	defer subscriber.Close()
 
-	SocketAddr := "tcp://" + Addr + ":" + ClientPort
+	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.ServerPortDistribute
+	log.Println(SocketAddr)
 	subscriber.Connect(SocketAddr)
 	subscriber.SetLinger(0)
 	subscriber.SetSubscribe("")
@@ -32,8 +37,8 @@ func main() {
 		var cluster Cluster
 		err = msgpack.Unmarshal(s, &cluster)
 		sort.Sort(ByName(cluster.Nodes))
-		cluster.print()
-		time.Sleep(Tick)
+		cluster.Print()
+		time.Sleep(time.Duration(cfg.Tick) * time.Millisecond)
 	}
 
 }

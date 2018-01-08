@@ -12,12 +12,15 @@ var node Node
 
 func main() {
 
+	var cfg Config
+	cfg.ReadConfig("cluster-smi.yml")
+
 	if err := nvml.InitNVML(); err != nil {
 		log.Fatalf("Failed initializing NVML: %s\n", err.Error())
 	}
 	defer nvml.ShutdownNVML()
 
-	SocketAddr := "tcp://" + Addr + ":" + NodePort
+	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.ServerPortGather
 	log.Println("Now pushing to", SocketAddr)
 	socket, err := zmq4.NewSocket(zmq4.PUSH)
 	if err != nil {
@@ -27,20 +30,17 @@ func main() {
 	socket.Connect(SocketAddr)
 
 	node := &Node{}
-	node.init()
+	node.Init()
 
 	log.Println("Cluster-SMI-Node is active. Press CTRL+C to shut down.")
-	for _ = range time.Tick(Tick) {
-		node.fetch()
+	for _ = range time.Tick(time.Duration(cfg.Tick) * time.Millisecond) {
+		node.Fetch()
 
 		// encode data
 		msg, err := msgpack.Marshal(&node)
 		if err != nil {
-			panic(err)
-		}
-
-		if err != nil {
 			log.Fatal("encode error:", err)
+			panic(err)
 		}
 
 		// send data
@@ -48,4 +48,3 @@ func main() {
 	}
 
 }
-

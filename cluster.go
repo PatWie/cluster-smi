@@ -9,13 +9,13 @@ import (
 )
 
 // Cluster
-func (c *Cluster) fetch() {
+func (c *Cluster) Fetch() {
 	for i, _ := range c.Nodes {
-		c.Nodes[i].fetch()
+		c.Nodes[i].Fetch()
 	}
 }
 
-func (c *Cluster) print() {
+func (c *Cluster) Print() {
 
 	table := termtables.CreateTable()
 
@@ -51,7 +51,7 @@ func (c *Cluster) print() {
 }
 
 // Node
-func (n *Node) init() {
+func (n *Node) Init() {
 	name, err := os.Hostname()
 	if err != nil {
 		panic(err)
@@ -64,14 +64,14 @@ func (n *Node) init() {
 	}
 }
 
-func (n *Node) print() {
+func (n *Node) Print() {
 	fmt.Println(n.Name)
 	for _, device := range n.Devices {
 		fmt.Println(device.Name)
 	}
 }
 
-func (n *Node) fetch() {
+func (n *Node) Fetch() {
 
 	devices, _ := nvml.GetDevices()
 
