@@ -10,8 +10,7 @@ import (
 
 func main() {
 
-	var cfg Config
-	cfg.ReadConfig("cluster-smi.yml")
+	cfg := CreateConfig()
 
 	subscriber, err := zmq4.NewSocket(zmq4.SUB)
 	if err != nil {
@@ -38,7 +37,7 @@ func main() {
 		err = msgpack.Unmarshal(s, &cluster)
 		sort.Sort(ByName(cluster.Nodes))
 		cluster.Print()
-		time.Sleep(time.Duration(cfg.Tick) * time.Millisecond)
+		time.Sleep(cfg.Tick)
 	}
 
 }

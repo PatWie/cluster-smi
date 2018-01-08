@@ -1,28 +1,32 @@
 package main
 
 import (
-	"gopkg.in/yaml.v2"
-	"io/ioutil"
+	"github.com/patwie/cluster-smi/compiletimeconst"
 	"log"
-	_ "time"
+	"strconv"
+	"time"
 )
 
 type Config struct {
-	ServerIp             string `yaml:"server_ip"`
-	ServerPortGather     string `yaml:"server_port_gather"`
-	ServerPortDistribute string `yaml:"server_port_distribute"`
-	Tick                 int    `yaml:"tick_ms"`
+	ServerIp             string        // ip of cluster-smi-server
+	ServerPortGather     string        // port of cluster-smi-server, which nodes send to
+	ServerPortDistribute string        // port of cluster-smi-server, where clients subscribe to
+	Tick                 time.Duration // tick between receiving data
 }
 
-func (C *Config) ReadConfig(fn string) *Config {
-	yamlFile, err := ioutil.ReadFile(fn)
-	if err != nil {
-		log.Fatalf("Error: %v ", err)
-	}
-	err = yaml.Unmarshal(yamlFile, C)
-	if err != nil {
-		log.Fatalf("Error in %s %v", fn, err)
-	}
+func CreateConfig() Config {
 
-	return C
+	log.Println(compiletimeconst.ServerIp)
+	log.Println(compiletimeconst.PortGather)
+	log.Println(compiletimeconst.PortDistribute)
+	log.Println(compiletimeconst.Tick)
+
+	c := Config{}
+	c.ServerIp = compiletimeconst.ServerIp
+	c.ServerPortGather = compiletimeconst.PortGather
+	c.ServerPortDistribute = compiletimeconst.PortDistribute
+
+	ms, _ := strconv.Atoi(compiletimeconst.Tick)
+	c.Tick = time.Duration(ms) * time.Millisecond
+	return c
 }

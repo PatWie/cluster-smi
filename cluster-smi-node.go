@@ -12,8 +12,7 @@ var node Node
 
 func main() {
 
-	var cfg Config
-	cfg.ReadConfig("cluster-smi.yml")
+	cfg := CreateConfig()
 
 	if err := nvml.InitNVML(); err != nil {
 		log.Fatalf("Failed initializing NVML: %s\n", err.Error())
@@ -33,7 +32,7 @@ func main() {
 	node.Init()
 
 	log.Println("Cluster-SMI-Node is active. Press CTRL+C to shut down.")
-	for _ = range time.Tick(time.Duration(cfg.Tick) * time.Millisecond) {
+	for _ = range time.Tick(cfg.Tick) {
 		node.Fetch()
 
 		// encode data

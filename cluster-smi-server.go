@@ -13,8 +13,7 @@ var allNodes map[string]Node
 func main() {
 	allNodes = make(map[string]Node)
 
-	var cfg Config
-	cfg.ReadConfig("cluster-smi.yml")
+	cfg := CreateConfig()
 
 	// incoming messages (Push-Pull)
 	SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortGather

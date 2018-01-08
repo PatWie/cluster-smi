@@ -1,4 +1,0 @@
-server_ip: 127.0.0.1         # ip of cluster-smi-server
-server_port_gather: 9090     # port of cluster-smi-server, which nodes send to
-server_port_distribute: 9091 # port of cluster-smi-server, where clients subscribe to
-tick_ms: 1000                # tick for receiving data in milliseconds

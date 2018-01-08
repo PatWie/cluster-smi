@@ -31,10 +31,6 @@
 			"ImportPath": "github.com/vmihailenco/msgpack/codes",
 			"Comment": "v3.2.2",
 			"Rev": "2fd97bb3583931cdf0d123f255ceb6e58649279e"
-		},
-		{
-			"ImportPath": "gopkg.in/yaml.v2",
-			"Rev": "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
 		}
 	]
 }
