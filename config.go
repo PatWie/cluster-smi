@@ -2,7 +2,6 @@ package main
 
 import (
 	"github.com/patwie/cluster-smi/compiletimeconst"
-	"log"
 	"strconv"
 	"time"
 )
@@ -15,11 +14,6 @@ type Config struct {
 }
 
 func CreateConfig() Config {
-
-	log.Println(compiletimeconst.ServerIp)
-	log.Println(compiletimeconst.PortGather)
-	log.Println(compiletimeconst.PortDistribute)
-	log.Println(compiletimeconst.Tick)
 
 	c := Config{}
 	c.ServerIp = compiletimeconst.ServerIp
