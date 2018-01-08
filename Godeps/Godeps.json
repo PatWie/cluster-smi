@@ -1,0 +1,40 @@
+{
+	"ImportPath": "github.com/patwie/cluster-smi",
+	"GoVersion": "go1.8",
+	"GodepVersion": "v79",
+	"Deps": [
+		{
+			"ImportPath": "github.com/apcera/termtables",
+			"Comment": "edge_test-2.7.2",
+			"Rev": "bcbc5dc54055d14996b256d348fb75cc6debe282"
+		},
+		{
+			"ImportPath": "github.com/apcera/termtables/term",
+			"Comment": "edge_test-2.7.2",
+			"Rev": "bcbc5dc54055d14996b256d348fb75cc6debe282"
+		},
+		{
+			"ImportPath": "github.com/mattn/go-runewidth",
+			"Comment": "v0.0.2-3-g97311d9",
+			"Rev": "97311d9f7767e3d6f422ea06661bc2c7a19e8a5d"
+		},
+		{
+			"ImportPath": "github.com/pebbe/zmq4",
+			"Rev": "651d7b11cd31b16fb4c76741c234e258b6a8039b"
+		},
+		{
+			"ImportPath": "github.com/vmihailenco/msgpack",
+			"Comment": "v3.2.2",
+			"Rev": "2fd97bb3583931cdf0d123f255ceb6e58649279e"
+		},
+		{
+			"ImportPath": "github.com/vmihailenco/msgpack/codes",
+			"Comment": "v3.2.2",
+			"Rev": "2fd97bb3583931cdf0d123f255ceb6e58649279e"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "287cf08546ab5e7e37d55a84f7ed3fd1db036de5"
+		}
+	]
+}
