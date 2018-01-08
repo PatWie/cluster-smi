@@ -20,7 +20,6 @@ func main() {
 	defer subscriber.Close()
 
 	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.ServerPortDistribute
-	log.Println(SocketAddr)
 	subscriber.Connect(SocketAddr)
 	subscriber.SetLinger(0)
 	subscriber.SetSubscribe("")
