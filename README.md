@@ -6,7 +6,36 @@ The same as `nvidia-smi` but for multiple machines at the same time.
 
 ## Install
 
-To obtain a portable small binary, we directly embed the configuration into the binary as compile-time constants from `cluster-smi.env` (example is given in `cluster-smi.example.env`).
+### Requirements
+
+I assume, you can compile a CUDA program, as the `cluster-smi-node` depends on the nvidia driver to get the metrics.
+
+
+Further, his app depends on msgpack and zmq (tested with 4.0.1). Compiling `libzmq` can be done by
+```bash
+# compile ZMQ library for c++
+cd /path/to/your_lib_folder
+wget https://archive.org/download/zeromq_4.1.0/zeromq-4.1.0-rc1.tar.gz
+tar -xf zeromq-4.1.0-rc1.tar.gz
+cd zeromq-4.1.0
+./autogen.sh
+./configure
+./configure --prefix=/path/to/your_lib_folder/zeromq-4.1.0/dist
+make
+make install
+```
+
+Finally,
+
+```
+export PKG_CONFIG_PATH=/path/to/your_lib_folder/zeromq-4.1.0/dist/lib/pkgconfig/:$PKG_CONFIG_PATH
+```
+
+Edit the CFLAGS, LDFLAGS in file `nvvml/nvml.go` to match your setup.
+
+### Compiling
+
+To obtain a portable small binary, we directly embed the configuration into the binary as compile-time constants from `cluster-smi.env` (example is given in `cluster-smi.example.env`). This way, the app is fully self-contained (excl. libzmq.so).
 
 ```nginx
 # file: cluster-smi.env
