@@ -1,71 +1,95 @@
 package main
 
 import (
+	"github.com/patwie/cluster-smi/cluster"
+	"github.com/patwie/cluster-smi/messaging"
 	"github.com/pebbe/zmq4"
 	"github.com/vmihailenco/msgpack"
 	"log"
-	"sort"
+	"sync"
 )
 
-var cluster Cluster
-var allNodes map[string]Node
+// nice cluster struct
+var clus cluster.Cluster
+
+// intermediate struct (under mutex lock)
+var allNodes map[string]cluster.Node
 
 func main() {
-	allNodes = make(map[string]Node)
 
+	// load ports and ip-address
 	cfg := CreateConfig()
 
-	// incoming messages (Push-Pull)
-	SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortGather
-	log.Println("Now listening on", SocketAddr)
-	node_socket, err := zmq4.NewSocket(zmq4.PULL)
-	if err != nil {
-		panic(err)
-	}
-	defer node_socket.Close()
-	node_socket.Bind(SocketAddr)
-
-	// outgoing messages (Pub-Sub)
-	SocketAddr = "tcp://" + "*" + ":" + cfg.ServerPortDistribute
-	log.Println("Now publishing to", SocketAddr)
-	publisher, err := zmq4.NewSocket(zmq4.PUB)
-	if err != nil {
-		panic(err)
-	}
-	defer publisher.Close()
-	publisher.Bind(SocketAddr)
+	allNodes = make(map[string]cluster.Node)
+	var mutex = &sync.Mutex{}
 
 	// message loop
 	log.Println("Cluster-SMI-Server is active. Press CTRL+C to shut down.")
+
+	// receiving messages in extra thread
+	go func() {
+		// incoming messages (PUSH-PULL)
+		SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortGather
+		log.Println("Now listening on", SocketAddr)
+		node_socket, err := zmq4.NewSocket(zmq4.PULL)
+		if err != nil {
+			panic(err)
+		}
+		defer node_socket.Close()
+		node_socket.Bind(SocketAddr)
+
+		for {
+			// read node information
+			s, err := node_socket.RecvBytes(0)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			var node cluster.Node
+			err = msgpack.Unmarshal(s, &node)
+			if err != nil {
+				log.Println(err)
+				continue
+			}
+
+			mutex.Lock()
+			allNodes[node.Name] = node
+			mutex.Unlock()
+
+		}
+	}()
+
+	// outgoing messages (REQ-ROUTER)
+	SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortDistribute
+	log.Println("Router binds to", SocketAddr)
+	router_socket, err := zmq4.NewSocket(zmq4.ROUTER)
+	if err != nil {
+		panic(err)
+	}
+	defer router_socket.Close()
+	router_socket.Bind(SocketAddr)
+
 	for {
-		// read node information
-		s, err := node_socket.RecvBytes(0)
+
+		// read request of client
+		msg, err := messaging.ReceiveMultipartMessage(router_socket)
 		if err != nil {
-			log.Println(err)
-			continue
+			panic(err)
 		}
 
-		var node Node
-		err = msgpack.Unmarshal(s, &node)
-		if err != nil {
-			log.Println(err)
-			// panic(err)
-			continue
-		}
-
-		// update information
-		allNodes[node.Name] = node
-
-		// rebuild cluster struct
-		cluster := Cluster{}
+		mutex.Lock()
+		// rebuild cluster struct from map
+		clus := cluster.Cluster{}
 		for _, n := range allNodes {
-			cluster.Nodes = append(cluster.Nodes, n)
+			clus.Nodes = append(clus.Nodes, n)
 		}
-		sort.Sort(ByName(cluster.Nodes))
+		mutex.Unlock()
 
-		// send cluster information
-		msg, err := msgpack.Marshal(&cluster)
-		publisher.SendBytes(msg, 0)
+		// send cluster information to client
+		body, err := msgpack.Marshal(&clus)
+		msg.Body = body
+		messaging.SendMultipartMessage(router_socket, &msg)
 
 	}
 

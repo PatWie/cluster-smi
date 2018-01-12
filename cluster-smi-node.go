@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/nvml"
 	"github.com/pebbe/zmq4"
 	"github.com/vmihailenco/msgpack"
@@ -8,10 +9,11 @@ import (
 	"time"
 )
 
-var node Node
+var node cluster.Node
 
 func main() {
 
+	// load ports and ip-address
 	cfg := CreateConfig()
 
 	if err := nvml.InitNVML(); err != nil {
@@ -19,6 +21,7 @@ func main() {
 	}
 	defer nvml.ShutdownNVML()
 
+	// sending messages (PUSH-PULL)
 	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.ServerPortGather
 	log.Println("Now pushing to", SocketAddr)
 	socket, err := zmq4.NewSocket(zmq4.PUSH)
@@ -28,12 +31,12 @@ func main() {
 	defer socket.Close()
 	socket.Connect(SocketAddr)
 
-	node := &Node{}
-	node.Init()
+	node := &cluster.Node{}
+	InitNode(node)
 
 	log.Println("Cluster-SMI-Node is active. Press CTRL+C to shut down.")
 	for _ = range time.Tick(cfg.Tick) {
-		node.Fetch()
+		FetchNode(node)
 
 		// encode data
 		msg, err := msgpack.Marshal(&node)
