@@ -88,4 +88,4 @@ make all
 2. start `cluster-smi-server` at a specific machine (`cluster_smi_server_ip`)
 3. use `cluster-smi` like `nvidia-smi`
 
-Make sure, the machines can communicate using the ports (`ufw allow 9080, 9081`)
+Make sure, the machines can communicate using the specifiec ports (`ufw allow 9080, 9081`)
