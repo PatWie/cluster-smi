@@ -30,6 +30,8 @@ Output should be something like
 
 Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending the information to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
 
+You might be interested as well in [cluster-top](https://github.com/PatWie/cluster-top) for CPUS.
+
 ## Install
 
 ### Requirements+Dependencies
