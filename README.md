@@ -28,15 +28,16 @@ Output should be something like
 +---------+------------------------+---------------------+----------+----------+
 ```
 
+Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending the information to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
 
 ## Install
 
-### Requirements
+### Requirements+Dependencies
 
-I assume, you can compile a CUDA program, as the `cluster-smi-node` depends on the nvidia driver to get the metrics.
+I assume you can compile a CUDA program, as the `cluster-smi-node` depends on the NVIDIA driver to get the metrics.
 
 
-Further, his app depends on msgpack and zmq (tested with 4.0.1). Compiling `libzmq` can be done by
+Dependencies are *MsgPack* for serialization and *ZMQ* (tested with 4.0.1) for messaging. Unfortunately, *ZMQ* can only be dynamically linked (`libzmq.so`) to this repository and you need to build it separately by
 ```bash
 # compile ZMQ library for c++
 cd /path/to/your_lib_folder
@@ -50,7 +51,7 @@ make
 make install
 ```
 
-Finally,
+Finally:
 
 ```
 export PKG_CONFIG_PATH=/path/to/your_lib_folder/zeromq-4.1.0/dist/lib/pkgconfig/:$PKG_CONFIG_PATH
@@ -60,7 +61,7 @@ Edit the CFLAGS, LDFLAGS in file `nvvml/nvml.go` to match your setup.
 
 ### Compiling
 
-To obtain a portable small binary, we directly embed the configuration into the binary as compile-time constants from `cluster-smi.env` (example is given in `cluster-smi.example.env`). This way, the app is fully self-contained (excl. libzmq.so).
+To obtain a portable small binary, we directly embed the configuration settings (ports, ip-addr) into the binary as compile-time constants from `cluster-smi.env` (example is given in `cluster-smi.example.env`). This way, the app is fully self-contained (excl. libzmq.so) and does not require any configuration-files.
 
 ```nginx
 # file: cluster-smi.env
@@ -84,8 +85,8 @@ make all
 
 ## Run
 
-1. start `cluster-smi-node` at different machines
-2. start `cluster-smi-server` at a specific machine (`cluster_smi_server_ip`)
+1. start `cluster-smi-node` at different machines having GPUs
+2. start `cluster-smi-server` at a specific machine (machine with ip-addr: `cluster_smi_server_ip`)
 3. use `cluster-smi` like `nvidia-smi`
 
-Make sure, the machines can communicate using the specifiec ports (`ufw allow 9080, 9081`)
+Make sure, the machines can communicate using the specifiec ports (e.g., `ufw allow 9080, 9081`)
