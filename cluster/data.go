@@ -57,7 +57,7 @@ func (c *Cluster) Print(verbose bool) {
 	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "Mem-Util", "GPU-Util"}
 
 	if verbose {
-		tableHeader = append(tableHeader, "Time", "Last Seen", "Timeout")
+		tableHeader = append(tableHeader, "Last Seen", "Timeout")
 	}
 	table.AddHeaders(tableHeader...)
 
@@ -91,13 +91,10 @@ func (c *Cluster) Print(verbose bool) {
 
 			if verbose {
 				lastseen := ""
-				stamp := ""
 				if d_id == 0 {
-					stamp = n.Time.Format("Mon Jan 2 15:04:05 2006")
-					lastseen = fmt.Sprintf("%f seconds ago", now.Sub(n.Time).Seconds())
+					lastseen = n.Time.Format("Mon Jan 2 15:04:05 2006")
 				}
 				tableRow = append(tableRow, lastseen)
-				tableRow = append(tableRow, stamp)
 				tableRow = append(tableRow, timeout)
 			}
 
