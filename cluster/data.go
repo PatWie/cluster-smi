@@ -107,5 +107,6 @@ func (c *Cluster) Print(verbose bool) {
 		}
 	}
 	fmt.Printf("\033[2J")
+	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
 	fmt.Println(table.Render())
 }
