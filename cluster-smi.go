@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/pebbe/zmq4"
@@ -22,6 +23,9 @@ func RequestUpdateMessage() (buf []byte, err error) {
 }
 
 func main() {
+
+	verbosePtr := flag.Bool("verbose", false, "verbose information")
+	flag.Parse()
 
 	request_attempts := 0
 
@@ -68,7 +72,7 @@ func main() {
 		var clus cluster.Cluster
 		err = msgpack.Unmarshal(s, &clus)
 		clus.Sort()
-		clus.Print()
+		clus.Print(*verbosePtr)
 		time.Sleep(cfg.Tick)
 	}
 

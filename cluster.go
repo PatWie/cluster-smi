@@ -4,6 +4,7 @@ import (
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/nvml"
 	"os"
+	"time"
 )
 
 // Cluster
@@ -20,6 +21,8 @@ func InitNode(n *cluster.Node) {
 		panic(err)
 	}
 	n.Name = name
+	n.Time = time.Now()
+
 	devices, _ := nvml.GetDevices()
 
 	for i := 0; i < len(devices); i++ {
@@ -30,6 +33,7 @@ func InitNode(n *cluster.Node) {
 func FetchNode(n *cluster.Node) {
 
 	devices, _ := nvml.GetDevices()
+	n.Time = time.Now()
 
 	for idx, device := range devices {
 		meminfo, _ := device.GetMemoryInfo()

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/apcera/termtables"
 	"sort"
-	"strconv"
 	"time"
 )
 
@@ -31,8 +30,9 @@ type Device struct {
 }
 
 type Node struct {
-	Name    string   `json:"name"`
-	Devices []Device `json:"devices"`
+	Name    string    `json:"name"`
+	Devices []Device  `json:"devices"`
+	Time    time.Time `json:"time"`
 }
 
 func (n *Node) Print() {
@@ -50,30 +50,58 @@ func (c *Cluster) Sort() {
 	sort.Sort(ByName(c.Nodes))
 }
 
-func (c *Cluster) Print() {
+func (c *Cluster) Print(verbose bool) {
 
 	table := termtables.CreateTable()
 
-	table.AddHeaders("Node", "Gpu", "Memory-Usage", "Mem-Util", "GPU-Util")
+	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "Mem-Util", "GPU-Util"}
+
+	if verbose {
+		tableHeader = append(tableHeader, "Time", "Last Seen", "Timeout")
+	}
+	table.AddHeaders(tableHeader...)
+
+	now := time.Now()
 
 	for n_id, n := range c.Nodes {
+
+		timeout := now.Sub(n.Time).Seconds() > 180
+
+		if verbose == false {
+			if timeout {
+				continue
+			}
+		}
+
 		for d_id, d := range n.Devices {
-			memPercent := int(d.MemoryUtilization.Used * 100 / d.MemoryUtilization.Total)
+			usedMemoryPercentage := int(d.MemoryUtilization.Used * 100 / d.MemoryUtilization.Total)
 
 			name := ""
 			if d_id == 0 {
 				name = n.Name
 			}
 
-			table.AddRow(
+			tableRow := []interface{}{
 				name,
-				strconv.Itoa(d.Id)+": "+d.Name,
-				strconv.FormatInt(d.MemoryUtilization.Used/1024/1024, 10)+
-					"MiB / "+
-					strconv.FormatInt(d.MemoryUtilization.Total/1024/1024, 10)+"MiB",
-				strconv.Itoa(memPercent)+"%",
-				strconv.Itoa(d.Utilization)+"%",
-			)
+				fmt.Sprintf("%d:%s", d.Id, d.Name),
+				fmt.Sprintf("%d MiB / %d MiB", d.MemoryUtilization.Used/1024/1024, d.MemoryUtilization.Total/1024/1024),
+				fmt.Sprintf("%d %%", usedMemoryPercentage),
+				fmt.Sprintf("%d %%", d.Utilization),
+			}
+
+			if verbose {
+				lastseen := ""
+				stamp := ""
+				if d_id == 0 {
+					stamp = n.Time.Format("Mon Jan 2 15:04:05 2006")
+					lastseen = fmt.Sprintf("%f seconds ago", now.Sub(n.Time).Seconds())
+				}
+				tableRow = append(tableRow, lastseen)
+				tableRow = append(tableRow, stamp)
+				tableRow = append(tableRow, timeout)
+			}
+
+			table.AddRow(tableRow...)
 			table.SetAlign(termtables.AlignRight, 3)
 
 		}
@@ -82,6 +110,5 @@ func (c *Cluster) Print() {
 		}
 	}
 	fmt.Printf("\033[2J")
-	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
 	fmt.Println(table.Render())
 }
