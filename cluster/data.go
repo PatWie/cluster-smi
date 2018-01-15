@@ -5,6 +5,7 @@ import (
 	"github.com/apcera/termtables"
 	"sort"
 	"strconv"
+	"time"
 )
 
 type ByName []Node
@@ -81,5 +82,6 @@ func (c *Cluster) Print() {
 		}
 	}
 	fmt.Printf("\033[2J")
+	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
 	fmt.Println(table.Render())
 }
