@@ -91,11 +91,13 @@ func (c *Cluster) Print(verbose bool) {
 
 			if verbose {
 				lastseen := ""
+				timeout_ := ""
 				if d_id == 0 {
 					lastseen = n.Time.Format("Mon Jan 2 15:04:05 2006")
+					timeout_ = fmt.Sprintf("%v", timeout)
 				}
 				tableRow = append(tableRow, lastseen)
-				tableRow = append(tableRow, timeout)
+				tableRow = append(tableRow, timeout_)
 			}
 
 			table.AddRow(tableRow...)
