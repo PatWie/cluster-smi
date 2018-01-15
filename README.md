@@ -5,7 +5,7 @@ The same as `nvidia-smi` but for multiple machines at the same time.
 <p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
 
 
-Output should be something like
+Run `cluster-smi` and the output should be something like
 
 ```
 +---------+------------------------+---------------------+----------+----------+
@@ -27,6 +27,8 @@ Output should be something like
 |         | 3: GeForce GTX 1080 Ti |  6812MiB / 11172MiB | 60%      | 36%      |
 +---------+------------------------+---------------------+----------+----------+
 ```
+
+Additional information are available, when using `cluster-smi -verbose`.
 
 Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending the information to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
 
