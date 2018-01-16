@@ -185,6 +185,6 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold f
 		}
 	}
 	fmt.Printf("\033[2J")
-	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
+	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"), "(possible flags: -p -t)")
 	fmt.Println(table.Render())
 }
