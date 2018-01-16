@@ -65,11 +65,22 @@ Edit the CFLAGS, LDFLAGS in file `nvvml/nvml.go` to match your setup.
 
 ### Compiling
 
-To obtain a portable small binary, I suggest to directly embed the configuration settings (ports, ip-addr) into the binary as compile-time constants. This way, the app is fully self-contained (excl. libzmq.so) and does not require any configuration-files. This can be done by
+You need to copy one file
 
 ```console
 user@host $ cp config.example.go config.go
-user@host $ edit config.go
+```
+
+To obtain a portable small binary, I suggest to directly embed the configuration settings (ports, ip-addr) into the binary as compile-time constants. This way, the app is fully self-contained (excl. libzmq.so) and does not require any configuration-files. This can be done by editing `config.go`:
+
+```go
+...
+c.ServerIp = "127.0.0.1"
+c.Tick = 3
+c.Timeout = 180
+c.Ports.Nodes = "9080"
+c.Ports.Clients = "9081"
+...
 ```
 
 Otherwise, you can specify the environment variable `CLUSTER_SMI_CONFIG_PATH` pointing to a yaml file (example in `cluster-smi.example.yml`).
