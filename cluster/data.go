@@ -110,7 +110,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					d.MemoryUtilization.Used/1024/1024,
 					d.MemoryUtilization.Total/1024/1024,
 					int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
-				device_utilization := fmt.Sprintf("%d %%", d.Utilization)
+				device_utilization := fmt.Sprintf("%3d %%", d.Utilization)
 
 				if timeout {
 					device_MemoryInfo = "TimeOut"
@@ -148,6 +148,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 						table.AddRow(tableRow...)
 						table.SetAlign(termtables.AlignRight, 3)
+						table.SetAlign(termtables.AlignCenter, 4)
 						if show_processes {
 							table.SetAlign(termtables.AlignRight, 5)
 						}
