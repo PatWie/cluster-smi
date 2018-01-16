@@ -1,5 +1,9 @@
 package main
 
+/*
+This is simply reproducing "nvidia-smi" without networking.
+*/
+
 import (
 	"flag"
 	"github.com/patwie/cluster-smi/cluster"
@@ -29,10 +33,10 @@ func main() {
 
 	cls.Nodes = append(cls.Nodes, node)
 
-	log.Println("Cluster-SMI-Node is active. Press CTRL+C to shut down.")
+	log.Println("Cluster-SMI-Local is active. Press CTRL+C to shut down.")
 	for _ = range time.Tick(cfg.Tick) {
 		FetchNode(&cls.Nodes[0])
-		cls.Print(*showProcessesPtr, *showTimePtr)
+		cls.Print(*showProcessesPtr, *showTimePtr, cfg.TimeoutThreshold)
 	}
 
 }

@@ -73,7 +73,7 @@ func main() {
 		var clus cluster.Cluster
 		err = msgpack.Unmarshal(s, &clus)
 		clus.Sort()
-		clus.Print(*showProcessesPtr, *showTimePtr)
+		clus.Print(*showProcessesPtr, *showTimePtr, cfg.TimeoutThreshold)
 		time.Sleep(cfg.Tick)
 	}
 

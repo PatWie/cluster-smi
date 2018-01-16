@@ -56,7 +56,7 @@ func (c *Cluster) Sort() {
 	sort.Sort(ByName(c.Nodes))
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool) {
+func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold float64) {
 
 	table := termtables.CreateTable()
 
@@ -74,7 +74,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool) {
 
 	for n_id, n := range c.Nodes {
 
-		timeout := now.Sub(n.Time).Seconds() > 180
+		timeout := now.Sub(n.Time).Seconds() > timeout_threshold
 		node_name := n.Name
 		node_lastseen := n.Time.Format("Mon Jan 2 15:04:05 2006")
 
