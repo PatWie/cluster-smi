@@ -22,11 +22,17 @@ type Memory struct {
 	Percentage int   `json:"percentage"`
 }
 
+type Process struct {
+	Pid           int
+	UsedGpuMemory int64
+}
+
 type Device struct {
 	Id                int    `json:"id"`
 	Name              string `json:"name"`
 	Utilization       int    `json:"utilization"`
 	MemoryUtilization Memory `json:"memory"`
+	Processes         []Process
 }
 
 type Node struct {
@@ -50,14 +56,17 @@ func (c *Cluster) Sort() {
 	sort.Sort(ByName(c.Nodes))
 }
 
-func (c *Cluster) Print(verbose bool) {
+func (c *Cluster) Print(show_processes bool, show_time bool) {
 
 	table := termtables.CreateTable()
 
-	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "Mem-Util", "GPU-Util"}
+	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util"}
 
-	if verbose {
-		tableHeader = append(tableHeader, "Last Seen", "Timeout")
+	if show_processes {
+		tableHeader = append(tableHeader, "Proccesses")
+	}
+	if show_time {
+		tableHeader = append(tableHeader, "Last Seen")
 	}
 	table.AddHeaders(tableHeader...)
 
@@ -66,42 +75,58 @@ func (c *Cluster) Print(verbose bool) {
 	for n_id, n := range c.Nodes {
 
 		timeout := now.Sub(n.Time).Seconds() > 180
-
-		if verbose == false {
-			if timeout {
-				continue
-			}
-		}
+		node_name := n.Name
+		node_lastseen := n.Time.Format("Mon Jan 2 15:04:05 2006")
 
 		for d_id, d := range n.Devices {
-			usedMemoryPercentage := int(d.MemoryUtilization.Used * 100 / d.MemoryUtilization.Total)
 
-			name := ""
-			if d_id == 0 {
-				name = n.Name
+			device_name := fmt.Sprintf("%d:%s", d.Id, d.Name)
+			device_MemoryInfo := fmt.Sprintf("%d MiB / %d MiB (%d %%)",
+				d.MemoryUtilization.Used/1024/1024,
+				d.MemoryUtilization.Total/1024/1024,
+				int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
+			device_utilization := fmt.Sprintf("%d %%", d.Utilization)
+
+			if timeout {
+				device_MemoryInfo = "TimeOut"
+				device_utilization = "TimeOut"
 			}
 
-			tableRow := []interface{}{
-				name,
-				fmt.Sprintf("%d:%s", d.Id, d.Name),
-				fmt.Sprintf("%d MiB / %d MiB", d.MemoryUtilization.Used/1024/1024, d.MemoryUtilization.Total/1024/1024),
-				fmt.Sprintf("%d %%", usedMemoryPercentage),
-				fmt.Sprintf("%d %%", d.Utilization),
+			if d_id > 0 {
+				node_name = ""
+			}
+			if d_id > 0 || !show_time {
+				node_lastseen = ""
 			}
 
-			if verbose {
-				lastseen := ""
-				timeout_ := ""
-				if d_id == 0 {
-					lastseen = n.Time.Format("Mon Jan 2 15:04:05 2006")
-					timeout_ = fmt.Sprintf("%v", timeout)
+			for p_id, p := range d.Processes {
+
+				if p_id > 0 {
+					node_name = ""
+					device_name = ""
+					device_MemoryInfo = ""
+					device_utilization = ""
 				}
-				tableRow = append(tableRow, lastseen)
-				tableRow = append(tableRow, timeout_)
-			}
 
-			table.AddRow(tableRow...)
-			table.SetAlign(termtables.AlignRight, 3)
+				tableRow := []interface{}{
+					node_name,
+					device_name,
+					device_MemoryInfo,
+					device_utilization,
+				}
+
+				if show_processes {
+					tableRow = append(tableRow, fmt.Sprintf("(%d) %3d MiB", p.Pid, p.UsedGpuMemory/1024/1024))
+				}
+
+				if show_time {
+					tableRow = append(tableRow, node_lastseen)
+				}
+
+				table.AddRow(tableRow...)
+				table.SetAlign(termtables.AlignRight, 3)
+				table.SetAlign(termtables.AlignRight, 5)
+			}
 
 		}
 		if n_id < len(c.Nodes)-1 {

@@ -1,8 +1,11 @@
 package nvml
 
 /*
-#cgo CFLAGS: -I/graphics/opt/opt_Ubuntu16.04/cuda/toolkit_8.0/cuda/include
-#cgo LDFLAGS: -lnvidia-ml -L/graphics/opt/opt_Ubuntu16.04/cuda/toolkit_8.0/cuda/lib64/stubs
+#cgo CFLAGS: -I/usr/local/cuda/include
+#cgo LDFLAGS: -lnvidia-ml -L/usr/local/cuda-8.0/targets/x86_64-linux/lib/stubs/
+
+// #cgo CFLAGS: -I/graphics/opt/opt_Ubuntu16.04/cuda/toolkit_8.0/cuda/include
+// #cgo LDFLAGS: -lnvidia-ml -L/graphics/opt/opt_Ubuntu16.04/cuda/toolkit_8.0/cuda/lib64/stubs
 
 #include "bridge.h"
 */
@@ -48,6 +51,12 @@ type NVMLMemory struct {
 	// Allocated FB memory (in bytes). Note that the driver/GPU always sets
 	// aside a small amount of memory for bookkeeping.
 	Used int64
+}
+
+type NVMLProcess struct {
+	Pid           int
+	UsedGpuMemory int64
+	// Procs         []C.nvmlProcessInfo_t
 }
 
 func newDevice(nvmlDevice C.nvmlDevice_t, idx int) (dev Device, err error) {
@@ -152,6 +161,41 @@ func (s *Device) GetMemoryInfo() (memInfo *NVMLMemory, err error) {
 		Total: int64(res.total),
 		Used:  int64(res.used),
 	}, nil
+}
+
+// GetMemoryInfo retrieves the amount of used, free and total memory available on the device, in bytes.
+func (s *Device) GetProcessInfo() (procInfo []NVMLProcess, err error) {
+
+	var res []C.nvmlProcessInfo_t
+	var cnt C.uint = 0
+
+	// first query the number of procs
+	result := C.nvmlDeviceGetComputeRunningProcesses(s.d, &cnt, nil)
+	if result == C.NVML_SUCCESS {
+		// no processed
+		return nil, nil
+	}
+	if result == C.NVML_ERROR_INSUFFICIENT_SIZE {
+		// we now know the number of procs
+		res = make([]C.nvmlProcessInfo_t, int(cnt))
+
+		if result := C.nvmlDeviceGetComputeRunningProcesses(s.d, &cnt, &res[0]); result != C.NVML_SUCCESS {
+			return nil, getGoError(result)
+		}
+
+		procsInfo := make([]NVMLProcess, int(cnt))
+		for i := 0; i < int(cnt); i++ {
+			procsInfo = append(procsInfo, NVMLProcess{
+				Pid:           int(res[i].pid),
+				UsedGpuMemory: int64(res[i].usedGpuMemory),
+			})
+		}
+
+		return procsInfo, nil
+	}
+
+	return nil, errNoError
+
 }
 
 // InitNVML initializes NVML
