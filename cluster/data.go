@@ -106,7 +106,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 			for d_id, d := range n.Devices {
 
 				device_name := fmt.Sprintf("%d:%s", d.Id, d.Name)
-				device_MemoryInfo := fmt.Sprintf("%d MiB / %d MiB (%d %%)",
+				device_MemoryInfo := fmt.Sprintf("%d MiB / %d MiB (%3d %%)",
 					d.MemoryUtilization.Used/1024/1024,
 					d.MemoryUtilization.Total/1024/1024,
 					int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
