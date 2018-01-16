@@ -30,7 +30,8 @@ func main() {
 
 	request_attempts := 0
 
-	cfg := CreateConfig()
+	// load ports and ip-address
+	cfg := LoadConfig()
 
 	// ask for updates messages (REQ-ROUTER)
 	request_socket, err := zmq4.NewSocket(zmq4.REQ)
@@ -40,7 +41,7 @@ func main() {
 	}
 	defer request_socket.Close()
 
-	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.ServerPortDistribute
+	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.Ports.Clients
 	request_socket.Connect(SocketAddr)
 	for {
 
@@ -73,8 +74,8 @@ func main() {
 		var clus cluster.Cluster
 		err = msgpack.Unmarshal(s, &clus)
 		clus.Sort()
-		clus.Print(*showProcessesPtr, *showTimePtr, cfg.TimeoutThreshold)
-		time.Sleep(cfg.Tick)
+		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
+		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 
 }

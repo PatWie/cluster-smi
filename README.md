@@ -28,7 +28,7 @@ Run `cluster-smi` and the output should be something like
 +---------+------------------------+---------------------+----------+----------+
 ```
 
-Additional information are available, when using `cluster-smi -verbose`.
+Additional information are available, when using `cluster-smi -p -t`.
 
 Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending the information to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
 
@@ -65,20 +65,14 @@ Edit the CFLAGS, LDFLAGS in file `nvvml/nvml.go` to match your setup.
 
 ### Compiling
 
-To obtain a portable small binary, we directly embed the configuration settings (ports, ip-addr) into the binary as compile-time constants from `cluster-smi.env` (example is given in `cluster-smi.example.env`). This way, the app is fully self-contained (excl. libzmq.so) and does not require any configuration-files.
+To obtain a portable small binary, I suggest to directly embed the configuration settings (ports, ip-addr) into the binary as compile-time constants. This way, the app is fully self-contained (excl. libzmq.so) and does not require any configuration-files. This can be done by
 
-```nginx
-# file: cluster-smi.env
-
-# ip of cluster-smi-server
-cluster_smi_server_ip="127.0.0.1"
-# port of cluster-smi-server, which nodes send to
-cluster_smi_server_port_gather="9080"
-# port of cluster-smi-server, where clients subscribe to
-cluster_smi_server_port_distribute="9081"
-# tick for receiving data in milliseconds
-cluster_smi_tick_ms="1000"
+```console
+user@host $ cp config.example.go config.go
+user@host $ edit config.go
 ```
+
+Otherwise, you can specify the environment variable `CLUSTER_SMI_CONFIG_PATH` pointing to a yaml file (example in `cluster-smi.example.yml`).
 
 Then run
 

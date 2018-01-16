@@ -17,7 +17,7 @@ var cls cluster.Cluster
 func main() {
 
 	// load ports and ip-address
-	cfg := CreateConfig()
+	cfg := LoadConfig()
 
 	showTimePtr := flag.Bool("t", false, "show time of events")
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
@@ -34,9 +34,9 @@ func main() {
 	cls.Nodes = append(cls.Nodes, node)
 
 	log.Println("Cluster-SMI-Local is active. Press CTRL+C to shut down.")
-	for _ = range time.Tick(cfg.Tick) {
+	for _ = range time.Tick(time.Duration(cfg.Tick) * time.Second) {
 		FetchNode(&cls.Nodes[0])
-		cls.Print(*showProcessesPtr, *showTimePtr, cfg.TimeoutThreshold)
+		cls.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
 	}
 
 }

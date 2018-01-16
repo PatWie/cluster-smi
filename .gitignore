@@ -1,1 +1,2 @@
-cluster-smi.env
+cluster-smi.yml
+config.go

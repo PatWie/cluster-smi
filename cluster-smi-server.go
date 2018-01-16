@@ -18,7 +18,8 @@ var allNodes map[string]cluster.Node
 func main() {
 
 	// load ports and ip-address
-	cfg := CreateConfig()
+	cfg := LoadConfig()
+	cfg.Print()
 
 	allNodes = make(map[string]cluster.Node)
 	var mutex = &sync.Mutex{}
@@ -29,7 +30,7 @@ func main() {
 	// receiving messages in extra thread
 	go func() {
 		// incoming messages (PUSH-PULL)
-		SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortGather
+		SocketAddr := "tcp://" + "*" + ":" + cfg.Ports.Nodes
 		log.Println("waiting for nodes connecting to ", SocketAddr)
 		node_socket, err := zmq4.NewSocket(zmq4.PULL)
 		if err != nil {
@@ -65,7 +66,7 @@ func main() {
 	}()
 
 	// outgoing messages (REQ-ROUTER)
-	SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortDistribute
+	SocketAddr := "tcp://" + "*" + ":" + cfg.Ports.Clients
 	log.Println("Waiting for clients connecting to", SocketAddr)
 	router_socket, err := zmq4.NewSocket(zmq4.ROUTER)
 	if err != nil {
