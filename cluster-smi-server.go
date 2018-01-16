@@ -30,7 +30,7 @@ func main() {
 	go func() {
 		// incoming messages (PUSH-PULL)
 		SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortGather
-		log.Println("Now listening on", SocketAddr)
+		log.Println("waiting for nodes connecting to ", SocketAddr)
 		node_socket, err := zmq4.NewSocket(zmq4.PULL)
 		if err != nil {
 			panic(err)
@@ -54,6 +54,10 @@ func main() {
 			}
 
 			mutex.Lock()
+			if _, ok := allNodes[node.Name]; !ok {
+				log.Printf("A new node \"%v\" connected\n", node.Name)
+			}
+
 			allNodes[node.Name] = node
 			mutex.Unlock()
 
@@ -62,7 +66,7 @@ func main() {
 
 	// outgoing messages (REQ-ROUTER)
 	SocketAddr := "tcp://" + "*" + ":" + cfg.ServerPortDistribute
-	log.Println("Router binds to", SocketAddr)
+	log.Println("Waiting for clients connecting to", SocketAddr)
 	router_socket, err := zmq4.NewSocket(zmq4.ROUTER)
 	if err != nil {
 		panic(err)
