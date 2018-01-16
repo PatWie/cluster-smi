@@ -78,57 +78,108 @@ func (c *Cluster) Print(show_processes bool, show_time bool) {
 		node_name := n.Name
 		node_lastseen := n.Time.Format("Mon Jan 2 15:04:05 2006")
 
-		for d_id, d := range n.Devices {
+		if timeout {
 
-			device_name := fmt.Sprintf("%d:%s", d.Id, d.Name)
-			device_MemoryInfo := fmt.Sprintf("%d MiB / %d MiB (%d %%)",
-				d.MemoryUtilization.Used/1024/1024,
-				d.MemoryUtilization.Total/1024/1024,
-				int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
-			device_utilization := fmt.Sprintf("%d %%", d.Utilization)
-
-			if timeout {
-				device_MemoryInfo = "TimeOut"
-				device_utilization = "TimeOut"
+			tableRow := []interface{}{
+				node_name,
+				"Offline",
+				"",
+				"",
 			}
 
-			if d_id > 0 {
-				node_name = ""
-			}
-			if d_id > 0 || !show_time {
-				node_lastseen = ""
+			if show_processes {
+				tableRow = append(tableRow, "")
 			}
 
-			for p_id, p := range d.Processes {
+			if show_time {
+				tableRow = append(tableRow, node_lastseen)
+			}
 
-				if p_id > 0 {
-					node_name = ""
-					device_name = ""
-					device_MemoryInfo = ""
-					device_utilization = ""
-				}
+			table.AddRow(tableRow...)
+			table.SetAlign(termtables.AlignRight, 3)
 
-				tableRow := []interface{}{
-					node_name,
-					device_name,
-					device_MemoryInfo,
-					device_utilization,
-				}
-
-				if show_processes {
-					tableRow = append(tableRow, fmt.Sprintf("(%d) %3d MiB", p.Pid, p.UsedGpuMemory/1024/1024))
-				}
-
-				if show_time {
-					tableRow = append(tableRow, node_lastseen)
-				}
-
-				table.AddRow(tableRow...)
-				table.SetAlign(termtables.AlignRight, 3)
+			if show_processes {
 				table.SetAlign(termtables.AlignRight, 5)
 			}
 
+		} else {
+			for d_id, d := range n.Devices {
+
+				device_name := fmt.Sprintf("%d:%s", d.Id, d.Name)
+				device_MemoryInfo := fmt.Sprintf("%d MiB / %d MiB (%d %%)",
+					d.MemoryUtilization.Used/1024/1024,
+					d.MemoryUtilization.Total/1024/1024,
+					int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
+				device_utilization := fmt.Sprintf("%d %%", d.Utilization)
+
+				if timeout {
+					device_MemoryInfo = "TimeOut"
+					device_utilization = "TimeOut"
+				}
+
+				if d_id > 0 {
+					node_name = ""
+				}
+				if d_id > 0 || !show_time {
+					node_lastseen = ""
+				}
+
+				if len(d.Processes) > 0 && show_processes {
+					for p_id, p := range d.Processes {
+
+						if p_id > 0 {
+							node_name = ""
+							device_name = ""
+							device_MemoryInfo = ""
+							device_utilization = ""
+						}
+
+						tableRow := []interface{}{
+							node_name,
+							device_name,
+							device_MemoryInfo,
+							device_utilization,
+							fmt.Sprintf("(%d) %3d MiB", p.Pid, p.UsedGpuMemory/1024/1024),
+						}
+
+						if show_time {
+							tableRow = append(tableRow, node_lastseen)
+						}
+
+						table.AddRow(tableRow...)
+						table.SetAlign(termtables.AlignRight, 3)
+						if show_processes {
+							table.SetAlign(termtables.AlignRight, 5)
+						}
+					}
+				} else {
+
+					tableRow := []interface{}{
+						node_name,
+						device_name,
+						device_MemoryInfo,
+						device_utilization,
+					}
+
+					if show_processes {
+						tableRow = append(tableRow, "")
+					}
+
+					if show_time {
+						tableRow = append(tableRow, node_lastseen)
+					}
+
+					table.AddRow(tableRow...)
+					table.SetAlign(termtables.AlignRight, 3)
+					if show_processes {
+						table.SetAlign(termtables.AlignRight, 5)
+					}
+
+				}
+
+			}
 		}
+
 		if n_id < len(c.Nodes)-1 {
 			table.AddSeparator()
 		}

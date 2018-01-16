@@ -24,7 +24,8 @@ func RequestUpdateMessage() (buf []byte, err error) {
 
 func main() {
 
-	verbosePtr := flag.Bool("verbose", false, "verbose information")
+	showTimePtr := flag.Bool("t", false, "show time of events")
+	showProcessesPtr := flag.Bool("p", false, "verbose process information")
 	flag.Parse()
 
 	request_attempts := 0
@@ -72,7 +73,7 @@ func main() {
 		var clus cluster.Cluster
 		err = msgpack.Unmarshal(s, &clus)
 		clus.Sort()
-		clus.Print(*verbosePtr)
+		clus.Print(*showProcessesPtr, *showTimePtr)
 		time.Sleep(cfg.Tick)
 	}
 
