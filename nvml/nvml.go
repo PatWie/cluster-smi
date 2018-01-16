@@ -163,28 +163,30 @@ func (s *Device) GetMemoryInfo() (memInfo *NVMLMemory, err error) {
 	}, nil
 }
 
-// GetMemoryInfo retrieves the amount of used, free and total memory available on the device, in bytes.
+// GetProcessInfo retrieves the active proccesses (pid, used gpu memory) running on the device
 func (s *Device) GetProcessInfo() (procInfo []NVMLProcess, err error) {
 
 	var res []C.nvmlProcessInfo_t
 	var cnt C.uint = 0
 
-	// first query the number of procs
+	// first query the number of procs (cnt := 0)
 	result := C.nvmlDeviceGetComputeRunningProcesses(s.d, &cnt, nil)
 	if result == C.NVML_SUCCESS {
-		// no processed
+		// no processes
 		return nil, nil
 	}
+
 	if result == C.NVML_ERROR_INSUFFICIENT_SIZE {
-		// we now know the number of procs
-		res = make([]C.nvmlProcessInfo_t, int(cnt))
+		// we now know the number of procs (see cnt)
+		num_procs := int(cnt)
+		res = make([]C.nvmlProcessInfo_t, num_procs)
 
 		if result := C.nvmlDeviceGetComputeRunningProcesses(s.d, &cnt, &res[0]); result != C.NVML_SUCCESS {
 			return nil, getGoError(result)
 		}
 
-		procsInfo := make([]NVMLProcess, int(cnt))
-		for i := 0; i < int(cnt); i++ {
+		procsInfo := make([]NVMLProcess, num_procs)
+		for i := 0; i < num_procs; i++ {
 			procsInfo = append(procsInfo, NVMLProcess{
 				Pid:           int(res[i].pid),
 				UsedGpuMemory: int64(res[i].usedGpuMemory),
