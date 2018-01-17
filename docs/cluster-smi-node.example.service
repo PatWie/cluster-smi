@@ -1,0 +1,13 @@
+[Unit]
+Description=Cluster-Smi-Node
+
+After=network.target local-fs.target multi-user.target
+Requires=network.target local-fs.target multi-user.target
+
+
+[Service]
+Type=simple
+StandardOutput=journal+console
+ExecStart=/path/to/cluster-smi-node
+
+## Add me by: sudo systemctl enable cluster-smi-node.service
