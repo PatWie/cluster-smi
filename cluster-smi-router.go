@@ -25,7 +25,7 @@ func main() {
 	var mutex = &sync.Mutex{}
 
 	// message loop
-	log.Println("Cluster-SMI-Server is active. Press CTRL+C to shut down.")
+	log.Println("Cluster-SMI-Router is active. Press CTRL+C to shut down.")
 
 	// receiving messages in extra thread
 	go func() {

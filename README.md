@@ -30,7 +30,7 @@ Additional information are available, when using `cluster-smi -p -t`.
 
 <p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
 
-Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending information from the nvidia-driver to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
+Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending information from the nvidia-driver to a *cluster-smi-router*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
 
 You might be interested as well in [cluster-top](https://github.com/PatWie/cluster-top) for CPUS.
 
@@ -76,7 +76,7 @@ To obtain a portable small binary, I suggest to directly embed the configuration
 
 ```go
 ...
-c.ServerIp = "127.0.0.1"
+c.RouterIp = "127.0.0.1"
 c.Tick = 3
 c.Timeout = 180
 c.Ports.Nodes = "9080"
@@ -96,7 +96,7 @@ make all
 ## Run
 
 1. start `cluster-smi-node` at different machines having GPUs
-2. start `cluster-smi-server` at a specific machine (machine with ip-addr: `cluster_smi_server_ip`)
+2. start `cluster-smi-router` at a specific machine (machine with ip-addr: `cluster_smi_router_ip`)
 3. use `cluster-smi` like `nvidia-smi`
 
 Make sure, the machines can communicate using the specifiec ports (e.g., `ufw allow 9080, 9081`)

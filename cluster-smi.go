@@ -41,7 +41,7 @@ func main() {
 	}
 	defer request_socket.Close()
 
-	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.Ports.Clients
+	SocketAddr := "tcp://" + cfg.RouterIp + ":" + cfg.Ports.Clients
 	request_socket.Connect(SocketAddr)
 	for {
 

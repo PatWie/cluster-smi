@@ -23,7 +23,7 @@ func main() {
 	defer nvml.ShutdownNVML()
 
 	// sending messages (PUSH-PULL)
-	SocketAddr := "tcp://" + cfg.ServerIp + ":" + cfg.Ports.Nodes
+	SocketAddr := "tcp://" + cfg.RouterIp + ":" + cfg.Ports.Nodes
 	log.Println("Now pushing to", SocketAddr)
 	socket, err := zmq4.NewSocket(zmq4.PUSH)
 	if err != nil {
