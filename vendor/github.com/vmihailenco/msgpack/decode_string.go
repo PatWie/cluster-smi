@@ -52,9 +52,6 @@ func decodeStringValue(d *Decoder, v reflect.Value) error {
 	if err != nil {
 		return err
 	}
-	if err = mustSet(v); err != nil {
-		return err
-	}
 	v.SetString(s)
 	return nil
 }
@@ -142,10 +139,6 @@ func decodeBytesValue(d *Decoder, v reflect.Value) error {
 
 	b, err := d.bytes(c, v.Bytes())
 	if err != nil {
-		return err
-	}
-
-	if err = mustSet(v); err != nil {
 		return err
 	}
 	v.SetBytes(b)

@@ -33,15 +33,13 @@ func RegisterExt(id int8, value interface{}) {
 	if _, ok := extTypes[id]; ok {
 		panic(fmt.Errorf("msgpack: ext with id=%d is already registered", id))
 	}
+	extTypes[id] = typ
 
 	registerExt(id, ptr, getEncoder(ptr), nil)
 	registerExt(id, typ, getEncoder(typ), getDecoder(typ))
 }
 
 func registerExt(id int8, typ reflect.Type, enc encoderFunc, dec decoderFunc) {
-	if dec != nil {
-		extTypes[id] = typ
-	}
 	if enc != nil {
 		typEncMap[typ] = makeExtEncoder(id, enc)
 	}
@@ -97,6 +95,14 @@ func (e *Encoder) encodeExtLen(l int) error {
 	return e.write4(codes.Ext32, uint32(l))
 }
 
+func (d *Decoder) decodeExtLen() (int, error) {
+	c, err := d.readCode()
+	if err != nil {
+		return 0, err
+	}
+	return d.parseExtLen(c)
+}
+
 func (d *Decoder) parseExtLen(c codes.Code) (int, error) {
 	switch c {
 	case codes.FixExt1:
@@ -123,11 +129,21 @@ func (d *Decoder) parseExtLen(c codes.Code) (int, error) {
 	}
 }
 
-func (d *Decoder) extInterface(c codes.Code) (interface{}, error) {
+func (d *Decoder) decodeExt() (interface{}, error) {
+	c, err := d.readCode()
+	if err != nil {
+		return 0, err
+	}
+	return d.ext(c)
+}
+
+func (d *Decoder) ext(c codes.Code) (interface{}, error) {
 	extLen, err := d.parseExtLen(c)
 	if err != nil {
 		return nil, err
 	}
+	// Save for later use.
+	d.extLen = extLen
 
 	extId, err := d.readCode()
 	if err != nil {
@@ -136,15 +152,11 @@ func (d *Decoder) extInterface(c codes.Code) (interface{}, error) {
 
 	typ, ok := extTypes[int8(extId)]
 	if !ok {
-		return nil, fmt.Errorf("msgpack: unregistered ext id=%d", int8(extId))
+		return nil, fmt.Errorf("msgpack: unregistered ext id=%d", extId)
 	}
 
-	v := reflect.New(typ)
-
-	d.extLen = extLen
-	err = d.DecodeValue(v.Elem())
-	d.extLen = 0
-	if err != nil {
+	v := reflect.New(typ).Elem()
+	if err := d.DecodeValue(v); err != nil {
 		return nil, err
 	}
 
@@ -156,7 +168,7 @@ func (d *Decoder) skipExt(c codes.Code) error {
 	if err != nil {
 		return err
 	}
-	return d.skipN(n + 1)
+	return d.skipN(n)
 }
 
 func (d *Decoder) skipExtHeader(c codes.Code) error {

@@ -24,13 +24,17 @@
 		},
 		{
 			"ImportPath": "github.com/vmihailenco/msgpack",
-			"Comment": "v3.2.2",
-			"Rev": "2fd97bb3583931cdf0d123f255ceb6e58649279e"
+			"Comment": "v3.1.0",
+			"Rev": "d91c9f43689d8565046de42f51a19bb80ebb8360"
 		},
 		{
 			"ImportPath": "github.com/vmihailenco/msgpack/codes",
-			"Comment": "v3.2.2",
-			"Rev": "2fd97bb3583931cdf0d123f255ceb6e58649279e"
+			"Comment": "v3.1.0",
+			"Rev": "d91c9f43689d8565046de42f51a19bb80ebb8360"
+		},
+		{
+			"ImportPath": "gopkg.in/yaml.v2",
+			"Rev": "d670f9405373e636a5a2765eea47fac0c9bc91a4"
 		}
 	]
 }

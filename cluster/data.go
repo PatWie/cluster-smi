@@ -25,6 +25,8 @@ type Memory struct {
 type Process struct {
 	Pid           int
 	UsedGpuMemory int64
+	Name          string
+	Username      string
 }
 
 type Device struct {
@@ -139,7 +141,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_name,
 							device_MemoryInfo,
 							device_utilization,
-							fmt.Sprintf("(%d) %3d MiB", p.Pid, p.UsedGpuMemory/1024/1024),
+							fmt.Sprintf("%s (%d, %s) %3d MiB", p.Name, p.Pid, p.Username, p.UsedGpuMemory/1024/1024),
 						}
 
 						if show_time {
@@ -186,6 +188,6 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 		}
 	}
 	fmt.Printf("\033[2J")
-	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"), "(possible flags: -p -t)")
+	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
 	fmt.Println(table.Render())
 }

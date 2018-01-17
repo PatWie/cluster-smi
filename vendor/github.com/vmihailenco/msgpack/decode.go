@@ -15,8 +15,9 @@ import (
 const bytesAllocLimit = 1024 * 1024 // 1mb
 
 type bufReader interface {
-	io.Reader
-	io.ByteScanner
+	Read([]byte) (int, error)
+	ReadByte() (byte, error)
+	UnreadByte() error
 }
 
 func newBufReader(r io.Reader) bufReader {
@@ -37,8 +38,7 @@ func Unmarshal(data []byte, v ...interface{}) error {
 }
 
 type Decoder struct {
-	r   io.Reader
-	s   io.ByteScanner
+	r   bufReader
 	buf []byte
 
 	extLen int
@@ -47,19 +47,13 @@ type Decoder struct {
 	decodeMapFunc func(*Decoder) (interface{}, error)
 }
 
-// NewDecoder returns a new decoder that reads from r.
-//
-// The decoder introduces its own buffering and may read data from r
-// beyond the MessagePack values requested. Buffering can be disabled
-// by passing a reader that implements io.ByteScanner interface.
 func NewDecoder(r io.Reader) *Decoder {
-	d := &Decoder{
+	return &Decoder{
 		decodeMapFunc: decodeMap,
 
+		r:   newBufReader(r),
 		buf: makeBuffer(),
 	}
-	d.resetReader(r)
-	return d
 }
 
 func (d *Decoder) SetDecodeMapFunc(fn func(*Decoder) (interface{}, error)) {
@@ -67,14 +61,8 @@ func (d *Decoder) SetDecodeMapFunc(fn func(*Decoder) (interface{}, error)) {
 }
 
 func (d *Decoder) Reset(r io.Reader) error {
-	d.resetReader(r)
+	d.r = newBufReader(r)
 	return nil
-}
-
-func (d *Decoder) resetReader(r io.Reader) {
-	reader := newBufReader(r)
-	d.r = reader
-	d.s = reader
 }
 
 func (d *Decoder) Decode(v ...interface{}) error {
@@ -242,6 +230,24 @@ func (d *Decoder) bool(c codes.Code) (bool, error) {
 	return false, fmt.Errorf("msgpack: invalid code=%x decoding bool", c)
 }
 
+func (d *Decoder) interfaceValue(v reflect.Value) error {
+	vv, err := d.DecodeInterface()
+	if err != nil {
+		return err
+	}
+	if vv != nil {
+		if v.Type() == errorType {
+			if vv, ok := vv.(string); ok {
+				v.Set(reflect.ValueOf(errors.New(vv)))
+				return nil
+			}
+		}
+
+		v.Set(reflect.ValueOf(vv))
+	}
+	return nil
+}
+
 // DecodeInterface decodes value into interface. Possible value types are:
 //   - nil,
 //   - bool,
@@ -249,7 +255,6 @@ func (d *Decoder) bool(c codes.Code) (bool, error) {
 //   - uint8, uint16, uint32, uint64,
 //   - float32 and float64,
 //   - string,
-//   - []byte,
 //   - slices of any of the above,
 //   - maps of any of the above.
 func (d *Decoder) DecodeInterface() (interface{}, error) {
@@ -262,7 +267,7 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 		return int8(c), nil
 	}
 	if codes.IsFixedMap(c) {
-		d.s.UnreadByte()
+		d.r.UnreadByte()
 		return d.DecodeMap()
 	}
 	if codes.IsFixedArray(c) {
@@ -304,63 +309,11 @@ func (d *Decoder) DecodeInterface() (interface{}, error) {
 	case codes.Array16, codes.Array32:
 		return d.decodeSlice(c)
 	case codes.Map16, codes.Map32:
-		d.s.UnreadByte()
+		d.r.UnreadByte()
 		return d.DecodeMap()
 	case codes.FixExt1, codes.FixExt2, codes.FixExt4, codes.FixExt8, codes.FixExt16,
 		codes.Ext8, codes.Ext16, codes.Ext32:
-		return d.extInterface(c)
-	}
-
-	return 0, fmt.Errorf("msgpack: unknown code %x decoding interface{}", c)
-}
-
-// DecodeInterfaceLoose is like DecodeInterface except that:
-//   - int8, int16, and int32 are converted to int64,
-//   - uint8, uint16, and uint32 are converted to uint64,
-//   - float32 is converted to float64.
-func (d *Decoder) DecodeInterfaceLoose() (interface{}, error) {
-	c, err := d.readCode()
-	if err != nil {
-		return nil, err
-	}
-
-	if codes.IsFixedNum(c) {
-		return int64(c), nil
-	}
-	if codes.IsFixedMap(c) {
-		d.s.UnreadByte()
-		return d.DecodeMap()
-	}
-	if codes.IsFixedArray(c) {
-		return d.decodeSlice(c)
-	}
-	if codes.IsFixedString(c) {
-		return d.string(c)
-	}
-
-	switch c {
-	case codes.Nil:
-		return nil, nil
-	case codes.False, codes.True:
-		return d.bool(c)
-	case codes.Float, codes.Double:
-		return d.float64(c)
-	case codes.Uint8, codes.Uint16, codes.Uint32, codes.Uint64:
-		return d.uint(c)
-	case codes.Int8, codes.Int16, codes.Int32, codes.Int64:
-		return d.int(c)
-	case codes.Bin8, codes.Bin16, codes.Bin32:
-		return d.bytes(c, nil)
-	case codes.Str8, codes.Str16, codes.Str32:
-		return d.string(c)
-	case codes.Array16, codes.Array32:
-		return d.decodeSlice(c)
-	case codes.Map16, codes.Map32:
-		d.s.UnreadByte()
-		return d.DecodeMap()
-	case codes.FixExt1, codes.FixExt2, codes.FixExt4, codes.FixExt8, codes.FixExt16,
-		codes.Ext8, codes.Ext16, codes.Ext32:
-		return d.extInterface(c)
+		return d.ext(c)
 	}
 
 	return 0, fmt.Errorf("msgpack: unknown code %x decoding interface{}", c)
@@ -412,11 +365,11 @@ func (d *Decoder) Skip() error {
 // PeekCode returns the next MessagePack code without advancing the reader.
 // Subpackage msgpack/codes contains list of available codes.
 func (d *Decoder) PeekCode() (codes.Code, error) {
-	c, err := d.s.ReadByte()
+	c, err := d.r.ReadByte()
 	if err != nil {
 		return 0, err
 	}
-	return codes.Code(c), d.s.UnreadByte()
+	return codes.Code(c), d.r.UnreadByte()
 }
 
 func (d *Decoder) hasNilCode() bool {
@@ -425,7 +378,7 @@ func (d *Decoder) hasNilCode() bool {
 }
 
 func (d *Decoder) readCode() (codes.Code, error) {
-	c, err := d.s.ReadByte()
+	c, err := d.r.ReadByte()
 	if err != nil {
 		return 0, err
 	}
@@ -459,18 +412,11 @@ func (d *Decoder) readN(n int) ([]byte, error) {
 }
 
 func readN(r io.Reader, b []byte, n int) ([]byte, error) {
-	if b == nil {
-		if n == 0 {
-			return make([]byte, 0), nil
-		}
-		if n <= bytesAllocLimit {
-			b = make([]byte, n)
-		} else {
-			b = make([]byte, bytesAllocLimit)
-		}
+	if n == 0 && b == nil {
+		return make([]byte, 0), nil
 	}
 
-	if n <= cap(b) {
+	if cap(b) >= n {
 		b = b[:n]
 		_, err := io.ReadFull(r, b)
 		return b, err
@@ -478,21 +424,18 @@ func readN(r io.Reader, b []byte, n int) ([]byte, error) {
 	b = b[:cap(b)]
 
 	var pos int
-	for {
-		alloc := n - len(b)
-		if alloc > bytesAllocLimit {
-			alloc = bytesAllocLimit
+	for len(b) < n {
+		diff := n - len(b)
+		if diff > bytesAllocLimit {
+			diff = bytesAllocLimit
 		}
-		b = append(b, make([]byte, alloc)...)
+		b = append(b, make([]byte, diff)...)
 
 		_, err := io.ReadFull(r, b[pos:])
 		if err != nil {
 			return nil, err
 		}
 
-		if len(b) == n {
-			break
-		}
 		pos = len(b)
 	}
 

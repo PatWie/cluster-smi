@@ -3,7 +3,10 @@ package main
 import (
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/nvml"
+	"github.com/patwie/cluster-smi/proc"
 	"os"
+	"os/user"
+	"strconv"
 	"time"
 )
 
@@ -36,6 +39,7 @@ func FetchNode(n *cluster.Node) {
 	n.Time = time.Now()
 
 	for idx, device := range devices {
+
 		meminfo, _ := device.GetMemoryInfo()
 		gpuPercent, _, _ := device.GetUtilization()
 		memPercent := int(meminfo.Used / meminfo.Total)
@@ -46,15 +50,31 @@ func FetchNode(n *cluster.Node) {
 			panic(err)
 		}
 
-		var p []cluster.Process
+		// collect al proccess informations
+		var processes []cluster.Process
+
 		for i := 0; i < len(deviceProcs); i++ {
+
 			if int(deviceProcs[i].Pid) == 0 {
 				continue
 			}
 
-			p = append(p, cluster.Process{
-				Pid:           deviceProcs[i].Pid,
+			PID := deviceProcs[i].Pid
+			_, name := proc.TimeAndNameFromPID(PID)
+
+			UID := proc.UIDFromPID(PID)
+			user, err := user.LookupId(strconv.Itoa(UID))
+
+			username := "unknown"
+			if err == nil {
+				username = user.Username
+			}
+
+			processes = append(processes, cluster.Process{
+				Pid:           PID,
 				UsedGpuMemory: deviceProcs[i].UsedGpuMemory,
+				Name:          name,
+				Username:      username,
 			})
 		}
 
@@ -62,7 +82,7 @@ func FetchNode(n *cluster.Node) {
 		n.Devices[idx].Name = device.DeviceName
 		n.Devices[idx].Utilization = gpuPercent
 		n.Devices[idx].MemoryUtilization = cluster.Memory{meminfo.Used, meminfo.Free, meminfo.Total, memPercent}
-		n.Devices[idx].Processes = p
+		n.Devices[idx].Processes = processes
 
 	}
 }

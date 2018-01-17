@@ -1,9 +1,6 @@
 # CLUSTER-SMI
 
-The same as `nvidia-smi` but for multiple machines at the same time.
-
-<p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
-
+The same as `nvidia-smi` but for multiple machines.
 
 Run `cluster-smi` and the output should be something like
 
@@ -30,18 +27,22 @@ Run `cluster-smi` and the output should be something like
 
 Additional information are available, when using `cluster-smi -p -t`.
 
-Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending the information to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
+
+<p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
+
+Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending information from the nvidia-driver to a *cluster-smi-server*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
 
 You might be interested as well in [cluster-top](https://github.com/PatWie/cluster-top) for CPUS.
 
 ## Install
 
-### Requirements+Dependencies
+### Requirements + Dependencies
 
-I assume you can compile a CUDA program, as the `cluster-smi-node` depends on the NVIDIA driver to get the metrics.
+- CUDA (just for `cluster-smi-node.go`)
+- ZMQ (4.0.1)
 
+Unfortunately, *ZMQ* can only be dynamically linked (`libzmq.so`) to this repository and you need to build it separately by
 
-Dependencies are *MsgPack* for serialization and *ZMQ* (tested with 4.0.1) for messaging. Unfortunately, *ZMQ* can only be dynamically linked (`libzmq.so`) to this repository and you need to build it separately by
 ```bash
 # compile ZMQ library for c++
 cd /path/to/your_lib_folder
@@ -65,7 +66,7 @@ Edit the CFLAGS, LDFLAGS in file `nvvml/nvml.go` to match your setup.
 
 ### Compiling
 
-You need to copy one file
+You need to copy one config-file
 
 ```console
 user@host $ cp config.example.go config.go
@@ -99,3 +100,22 @@ make all
 3. use `cluster-smi` like `nvidia-smi`
 
 Make sure, the machines can communicate using the specifiec ports (e.g., `ufw allow 9080, 9081`)
+
+## Use systemd
+
+To ease the use of this app, I suggest to add the *cluster-smi-node* into a systemd-service. An example config file can be found <a href="./docs/cluster-smi-node.example.service">here</a>. The steps would be
+
+```bash
+# add new entry to systemd
+sudo cp docs/cluster-smi-node.example.service /etc/systemd/system/cluster-smi-node.service
+# edit the path to cluster-smi-node
+sudo nano /etc/systemd/system/cluster-smi-node.service
+# make sure you can start and stop the service (have a look at you cluster-smi client)
+sudo service cluster-smi-node start
+sudo service cluster-smi-node stop
+# register cluster-smi-node to start on reboots
+sudo systemctl enable cluster-smi-node.service
+
+# last, start the service
+sudo service cluster-smi-node start
+```
