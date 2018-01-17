@@ -10,10 +10,10 @@ import (
 type Config struct {
 	Tick     int    `yaml:"tick"`      // tick (in seconds) between receiving data
 	Timeout  int    `yaml:"timeout"`   // threshold (in seconds) after a node is considered/displayed as offline
-	ServerIp string `yaml:"server_ip"` // ip of cluster-smi-server
+	RouterIp string `yaml:"router_ip"` // ip of cluster-smi-router
 	Ports    struct {
-		Nodes   string `yaml:"nodes"`   // port of cluster-smi-server, which nodes send to
-		Clients string `yaml:"clients"` // port of cluster-smi-server, where clients subscribe to
+		Nodes   string `yaml:"nodes"`   // port of cluster-smi-router, which nodes send to
+		Clients string `yaml:"clients"` // port of cluster-smi-router, where clients subscribe to
 	} `yaml:"ports"`
 }
 
@@ -21,7 +21,7 @@ func LoadConfig() Config {
 
 	c := Config{}
 
-	c.ServerIp = "127.0.0.1"
+	c.RouterIp = "127.0.0.1"
 	c.Tick = 3
 	c.Timeout = 180
 	c.Ports.Nodes = "9080"
@@ -54,7 +54,7 @@ func (c Config) Print() {
 
 	log.Println("  Tick:", c.Tick)
 	log.Println("  Timeout:", c.Timeout)
-	log.Println("  ServerIp:", c.ServerIp)
+	log.Println("  RouterIp:", c.RouterIp)
 	log.Println("  Ports:")
 	log.Println("    Nodes:", c.Ports.Nodes)
 	log.Println("    Clients:", c.Ports.Clients)
