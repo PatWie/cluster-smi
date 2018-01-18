@@ -32,17 +32,41 @@ Additional information are available, when using
 
 ```console
 user@host $ cluster-smi -h
+
 Usage of ./cluster-smi:
   -p  verbose process information
   -t  show time of events
 
 ```
 
-## Cluster Monitoring
+## Monitoring Modes
 
-This repository contains two versions:
-- *cluster-smi-local*: same as *nvidia-smi* but mroe verbose process information
-- *cluster-smi*: all information from *cluster-smi-local* but for multiple machines.
+This repository contains two versions: *cluster-smi-local*, *cluster-smi*.
+
+### Local (cluster-smi-local)
+
+*cluster-smi-local* is the same as *nvidia-smi* but provides more verbose process information with the flag `-p`:
+
+```console
+
+user@host $ cluster-smi-local -p
+
+Thu Jan 18 21:44:51 2018
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+
+| Node          | Gpu                   | Memory-Usage                  | GPU-Util | PID   | User     | Command       | GPU Mem   | Runtime                 |
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+
+| node01        | 0:TITAN Xp            |  4477 MiB / 12189 MiB ( 36 %) |   39 %   |  5641 | john     | smokeparticle | 4465 MiB  |  1 d 21 h 58 min 19 sec |
+|               | 1:TITAN Xp            |     0 MiB / 12189 MiB (  0 %) |    0 %   |       |          |               |           |                         |
+|               | 2:TITAN Xp            |  4477 MiB / 12189 MiB ( 36 %) |   37 %   | 15963 | john     | smokeparticle | 4465 MiB  |  1 d 10 h 36 min 53 sec |
+|               | 3:TITAN Xp            |  9930 MiB / 12189 MiB ( 81 %) |   94 %   | 10501 | john     | smokeparticle | 4465 MiB  |  1 d 19 h 30 min 27 sec |
+|               |                       |                               |          | 10200 | jane     | caffe         | 5465 MiB  |  2 d 11 h 01 min  7 sec |
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+
+
+```
+
+### Cluster (cluster-smi)
+
+*cluster-smi* displays all information from *cluster-smi-local* but for **multiple** machines at the same time.
 
 <p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
 
