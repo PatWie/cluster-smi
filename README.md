@@ -4,7 +4,10 @@ The same as `nvidia-smi` but for multiple machines.
 
 Run `cluster-smi` and the output should be something like
 
-```
+```console
+user@host $ cluster-smi
+
+Thu Jan 18 21:35:51 2018
 +---------+------------------------+---------------------+----------+----------+
 | Node    | Gpu                    | Memory-Usage        | Mem-Util | GPU-Util |
 +---------+------------------------+---------------------+----------+----------+
@@ -25,16 +28,29 @@ Run `cluster-smi` and the output should be something like
 +---------+------------------------+---------------------+----------+----------+
 ```
 
-Additional information are available, when using `cluster-smi -p -t`.
+Additional information are available, when using 
 
+```console
+user@host $ cluster-smi -h
+Usage of ./cluster-smi:
+  -p  verbose process information
+  -t  show time of events
+
+```
+
+## Cluster Monitoring
+
+This repository contains two versions:
+- *cluster-smi-local*: same as *nvidia-smi* but mroe verbose process information
+- *cluster-smi*: all information from *cluster-smi-local* but for multiple machines.
 
 <p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
 
-Each machine you want to monitor need to start *cluster-smi-node* (e.g. using systemd). They are sending information from the nvidia-driver to a *cluster-smi-router*, which further distribute these information to client (*cluster-smi*). Only the machines running *cluster-smi-node* require CUDA dependencies.
+On each machine you want to monitor you need to start *cluster-smi-node*. They are sending information from the nvidia-driver to a *cluster-smi-router*, which further distribute these information to client (*cluster-smi*) when requested. Only the machines running *cluster-smi-node* require CUDA dependencies.
 
 You might be interested as well in [cluster-top](https://github.com/PatWie/cluster-top) for CPUS.
 
-## Install
+## Installation
 
 ### Requirements + Dependencies
 
@@ -93,7 +109,7 @@ make all
 ```
 
 
-## Run
+### Run
 
 1. start `cluster-smi-node` at different machines having GPUs
 2. start `cluster-smi-router` at a specific machine (machine with ip-addr: `cluster_smi_router_ip`)
@@ -101,7 +117,7 @@ make all
 
 Make sure, the machines can communicate using the specifiec ports (e.g., `ufw allow 9080, 9081`)
 
-## Use systemd
+### Use systemd
 
 To ease the use of this app, I suggest to add the *cluster-smi-node* into a systemd-service. An example config file can be found <a href="./docs/cluster-smi-node.example.service">here</a>. The steps would be
 
@@ -119,3 +135,66 @@ sudo systemctl enable cluster-smi-node.service
 # last, start the service
 sudo service cluster-smi-node start
 ```
+
+## Show all information
+
+```console
+
+user@host $ cluster-smi -p -t
+
+Thu Jan 18 21:44:51 2018
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+--------------------------+
+| Node          | Gpu                   | Memory-Usage                  | GPU-Util | PID   | User     | Command       | GPU Mem   | Runtime                 | Last Seen                |
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+--------------------------+
+| node00        | 0:TITAN Xp            |     0 MiB / 12189 MiB (  0 %) |    0 %   |       |          |               |           |                         | Thu Jan 18 21:44:49 2018 |
+|               | 1:TITAN Xp            |     0 MiB / 12189 MiB (  0 %) |    0 %   |       |          |               |           |                         |                          |
+|               | 2:TITAN Xp            |     0 MiB / 12189 MiB (  0 %) |    0 %   |       |          |               |           |                         |                          |
+|               | 3:TITAN Xp            |     0 MiB / 12189 MiB (  0 %) |    0 %   |       |          |               |           |                         |                          |
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+--------------------------+
+| node01        | 0:TITAN Xp            |  4477 MiB / 12189 MiB ( 36 %) |   39 %   |  5641 | john     | smokeparticle | 4465 MiB  |  1 d 21 h 58 min 19 sec | Thu Jan 18 21:44:50 2018 |
+|               | 1:TITAN Xp            |     0 MiB / 12189 MiB (  0 %) |    0 %   |       |          |               |           |                         |                          |
+|               | 2:TITAN Xp            |  4477 MiB / 12189 MiB ( 36 %) |   37 %   | 15963 | john     | smokeparticle | 4465 MiB  |  1 d 10 h 36 min 53 sec |                          |
+|               | 3:TITAN Xp            |  9930 MiB / 12189 MiB ( 81 %) |   94 %   | 10501 | john     | smokeparticle | 4465 MiB  |  1 d 19 h 30 min 27 sec |                          |
+|               |                       |                               |          | 10200 | jane     | caffe         | 5465 MiB  |  2 d 11 h 01 min  7 sec |                          |
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+--------------------------+
+| node02        | 0:GeForce GTX 1080 Ti |  9352 MiB / 11172 MiB ( 83 %) |   61 %   |  9368 | doe      | python        | 2325 MiB  |  9 h 52 min  9 sec      | Thu Jan 18 21:44:49 2018 |
+|               |                       |                               |          |  9434 | doe      | python        | 2339 MiB  |  9 h 51 min 48 sec      |                          |
+|               |                       |                               |          |  9461 | doe      | python        | 2339 MiB  |  9 h 51 min 40 sec      |                          |
+|               |                       |                               |          |  9503 | doe      | python        | 2339 MiB  |  9 h 51 min 31 sec      |                          |
+|               | 1:GeForce GTX 1080 Ti |  9352 MiB / 11172 MiB ( 83 %) |   34 %   |  9621 | doe      | python        | 2339 MiB  |  9 h 49 min 13 sec      |                          |
+|               |                       |                               |          |  9644 | doe      | python        | 2325 MiB  |  9 h 49 min  7 sec      |                          |
+|               |                       |                               |          |  9670 | doe      | python        | 2339 MiB  |  9 h 49 min  1 sec      |                          |
+|               |                       |                               |          |  9751 | doe      | python        | 2339 MiB  |  9 h 48 min 51 sec      |                          |
+|               | 2:GeForce GTX 1080 Ti |  9366 MiB / 11172 MiB ( 83 %) |   15 %   |  9857 | doe      | python        | 2339 MiB  |  9 h 47 min 44 sec      |                          |
+|               |                       |                               |          |  9868 | doe      | python        | 2339 MiB  |  9 h 47 min 37 sec      |                          |
+|               |                       |                               |          |  9911 | doe      | python        | 2339 MiB  |  9 h 47 min 27 sec      |                          |
+|               |                       |                               |          |  9983 | doe      | python        | 2339 MiB  |  9 h 47 min 19 sec      |                          |
+|               | 3:GeForce GTX 1080 Ti |  9340 MiB / 11172 MiB ( 83 %) |   33 %   | 10144 | doe      | python        | 2325 MiB  |  9 h 43 min 30 sec      |                          |
+|               |                       |                               |          | 10168 | doe      | python        | 2339 MiB  |  9 h 43 min 23 sec      |                          |
+|               |                       |                               |          | 10192 | doe      | python        | 2339 MiB  |  9 h 43 min 17 sec      |                          |
+|               |                       |                               |          | 10220 | doe      | python        | 2327 MiB  |  9 h 43 min 10 sec      |                          |
++---------------+-----------------------+-------------------------------+----------+-------+----------+---------------+-----------+-------------------------+--------------------------+
+
+```
+
+
+
+
+Explanation:
+
+For flag `-p`
+- *Node* is hostname of the machine
+- *Gpu* lists all devices 
+- *Memory-Usage* lists used GPU memory
+- *Gpu-Util* current GPU utilization
+- *PID* process id of processes with active cuda context
+- *User* owner (username) of PID
+- *Command* command which is running
+- *Command* command which is running
+- *GPU Mem* use memory for only that particular process
+- *Runtime* total time the process is already running
+
+For flag `-t`
+- *Last Seen* timestamp of last message of the machine status
+
+If the last message is older than 3 minutes, this list will print a "Timeout/Offline" in this line. Make sure the machine is running. Any new message will remove this note.

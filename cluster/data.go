@@ -73,13 +73,13 @@ func HumanizeSeconds(secs int64) string {
 		answer = fmt.Sprintf("%s %d d", answer, days)
 	}
 	if hours > 0 {
-		answer = fmt.Sprintf("%s %d h", answer, hours)
+		answer = fmt.Sprintf("%s %2d h", answer, hours)
 	}
 	if minutes > 0 {
-		answer = fmt.Sprintf("%s %d min", answer, minutes)
+		answer = fmt.Sprintf("%s %2d min", answer, minutes)
 	}
 	if seconds > 0 {
-		answer = fmt.Sprintf("%s %d sec", answer, seconds)
+		answer = fmt.Sprintf("%s %2d sec", answer, seconds)
 	}
 
 	return answer
