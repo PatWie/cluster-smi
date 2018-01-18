@@ -145,7 +145,13 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						}
 
 						if show_time {
-							tableRow = append(tableRow, node_lastseen)
+							if p_id > 0 {
+								tableRow = append(tableRow, "")
+
+							} else {
+								tableRow = append(tableRow, node_lastseen)
+
+							}
 						}
 
 						table.AddRow(tableRow...)
