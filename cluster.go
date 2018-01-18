@@ -26,6 +26,10 @@ func InitNode(n *cluster.Node) {
 	n.Name = name
 	n.Time = time.Now()
 
+	boot_time, _ := proc.BootTime()
+	n.BootTime = boot_time
+	n.ClockTicks = proc.ClockTicks()
+
 	devices, _ := nvml.GetDevices()
 
 	for i := 0; i < len(devices); i++ {
@@ -37,6 +41,11 @@ func FetchNode(n *cluster.Node) {
 
 	devices, _ := nvml.GetDevices()
 	n.Time = time.Now()
+
+	boot_time, _ := proc.BootTime()
+	n.BootTime = boot_time
+
+	current_time := proc.TimeOfDay()
 
 	for idx, device := range devices {
 
@@ -60,7 +69,7 @@ func FetchNode(n *cluster.Node) {
 			}
 
 			PID := deviceProcs[i].Pid
-			_, name := proc.TimeAndNameFromPID(PID)
+			pid_info := proc.InfoFromPid(PID)
 
 			UID := proc.UIDFromPID(PID)
 			user, err := user.LookupId(strconv.Itoa(UID))
@@ -73,8 +82,9 @@ func FetchNode(n *cluster.Node) {
 			processes = append(processes, cluster.Process{
 				Pid:           PID,
 				UsedGpuMemory: deviceProcs[i].UsedGpuMemory,
-				Name:          name,
+				Name:          pid_info.Command,
 				Username:      username,
+				RunTime:       (current_time - n.BootTime) - (pid_info.StartTime / n.ClockTicks),
 			})
 		}
 
