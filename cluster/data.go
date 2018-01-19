@@ -68,18 +68,47 @@ func HumanizeSeconds(secs int64) string {
 	minutes := (secs / 60) % 60
 	seconds := secs % 60
 
+	// a bug in term-tables ? cannot "right-align" last cell to
+	has_prefix := false
+
 	answer := ""
 	if days > 0 {
-		answer = fmt.Sprintf("%s %d d", answer, days)
+		answer = fmt.Sprintf("%s %2d d", answer, days)
+		has_prefix = true
+	} else {
+		answer = fmt.Sprintf("%s     ", answer)
 	}
 	if hours > 0 {
 		answer = fmt.Sprintf("%s %2d h", answer, hours)
+		has_prefix = true
+	} else {
+		if has_prefix {
+			answer = fmt.Sprintf("%s  0 h", answer)
+		} else {
+			answer = fmt.Sprintf("%s     ", answer)
+		}
+
 	}
 	if minutes > 0 {
 		answer = fmt.Sprintf("%s %2d min", answer, minutes)
+		has_prefix = true
+	} else {
+		if has_prefix {
+			answer = fmt.Sprintf("%s  0 min ", answer)
+		} else {
+			answer = fmt.Sprintf("%s     ", answer)
+		}
+
 	}
 	if seconds > 0 {
 		answer = fmt.Sprintf("%s %2d sec", answer, seconds)
+		has_prefix = true
+	} else {
+		if has_prefix {
+			answer = fmt.Sprintf("%s  0 sec", answer)
+		} else {
+			answer = fmt.Sprintf("%s     ", answer)
+		}
 	}
 
 	return answer
@@ -196,8 +225,13 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						table.SetAlign(termtables.AlignCenter, 4)
 						if show_processes {
 							table.SetAlign(termtables.AlignRight, 5)
+							// table.SetAlign(termtables.AlignRight, 7)
+							table.SetAlign(termtables.AlignRight, 8)
+							table.SetAlign(termtables.AlignRight, 9)
+							// table.SetAlign(termtables.AlignRight, 9)
 						}
 					}
+
 				} else {
 
 					tableRow := []interface{}{
@@ -223,6 +257,8 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					table.SetAlign(termtables.AlignRight, 3)
 					if show_processes {
 						table.SetAlign(termtables.AlignRight, 5)
+						table.SetAlign(termtables.AlignRight, 8)
+						table.SetAlign(termtables.AlignRight, 9)
 					}
 
 				}
