@@ -138,8 +138,9 @@ func (c *Cluster) Print(selected_nodes string, show_processes bool, show_time bo
 
 	// selected_nodes = "abc,def"
 	selected_names := strings.Split(selected_nodes, ",")
+	num_of_displayed_nodes := 0
 
-	for n_id, n := range c.Nodes {
+	for _, n := range c.Nodes {
 
 		timeout := now.Sub(n.Time).Seconds() > float64(timeout_threshold)
 		node_name := n.Name
@@ -156,6 +157,10 @@ func (c *Cluster) Print(selected_nodes string, show_processes bool, show_time bo
 			if node_valid == false {
 				continue
 			}
+		}
+
+		if num_of_displayed_nodes > 0 {
+			table.AddSeparator()
 		}
 
 		if timeout {
@@ -282,10 +287,7 @@ func (c *Cluster) Print(selected_nodes string, show_processes bool, show_time bo
 
 			}
 		}
-
-		if n_id < len(c.Nodes)-1 {
-			table.AddSeparator()
-		}
+		num_of_displayed_nodes += 1
 	}
 	fmt.Printf("\033[2J")
 	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
