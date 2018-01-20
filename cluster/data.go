@@ -5,6 +5,7 @@ import (
 	"github.com/apcera/termtables"
 	"sort"
 	"time"
+	"strings"
 )
 
 type ByName []Node
@@ -115,7 +116,7 @@ func HumanizeSeconds(secs int64) string {
 
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int) {
+func (c *Cluster) Print(selected_nodes string, show_processes bool, show_time bool, timeout_threshold int) {
 
 	table := termtables.CreateTable()
 
@@ -135,11 +136,27 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 	now := time.Now()
 
+	// selected_nodes = "abc,def"
+	selected_names := strings.Split(selected_nodes, ",")
+
 	for n_id, n := range c.Nodes {
 
 		timeout := now.Sub(n.Time).Seconds() > float64(timeout_threshold)
 		node_name := n.Name
 		node_lastseen := n.Time.Format("Mon Jan 2 15:04:05 2006")
+
+		if selected_nodes != "" {
+			node_valid := false
+			for _, selected_name := range selected_names {
+				if selected_name == node_name {
+					node_valid = true
+					break
+				}
+			}
+			if node_valid == false {
+				continue
+			}
+		}
 
 		if timeout {
 
