@@ -151,7 +151,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 			}
 
 			if show_processes {
-				tableRow = append(tableRow, "")
+				tableRow = append(tableRow, []interface{}{"", "", "", "", ""})
 			}
 
 			if show_time {
@@ -242,11 +242,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					}
 
 					if show_processes {
-						tableRow = append(tableRow, "")
-						tableRow = append(tableRow, "")
-						tableRow = append(tableRow, "")
-						tableRow = append(tableRow, "")
-						tableRow = append(tableRow, "")
+						tableRow = append(tableRow, []interface{}{"", "", "", "", ""})
 					}
 
 					if show_time {
