@@ -26,6 +26,9 @@ func main() {
 
 	showTimePtr := flag.Bool("t", false, "show time of events")
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
+	selectedNodes :=flag.String("n", "", "select node(s) to display information, " +
+                                         "muliple nodes are separated by comma without space " +
+                                         "(if not specified, all nodes will be shown)")
 	flag.Parse()
 
 	request_attempts := 0
@@ -74,7 +77,7 @@ func main() {
 		var clus cluster.Cluster
 		err = msgpack.Unmarshal(s, &clus)
 		clus.Sort()
-		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
+		clus.Print(*selectedNodes, *showProcessesPtr, *showTimePtr, cfg.Timeout)
 		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 
