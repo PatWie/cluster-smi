@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"github.com/apcera/termtables"
+	"regexp"
 	"sort"
 	"time"
 )
@@ -113,6 +114,19 @@ func HumanizeSeconds(secs int64) string {
 
 	return answer
 
+}
+
+func (c *Cluster) FilterNodes(node_regex string) {
+	r, _ := regexp.Compile(node_regex)
+	var match_nodes []Node
+
+	for _, node := range c.Nodes {
+		if r.MatchString(node.Name) {
+			match_nodes = append(match_nodes, node)
+		}
+	}
+
+	c.Nodes = match_nodes
 }
 
 func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int) {
