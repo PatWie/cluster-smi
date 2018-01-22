@@ -5,6 +5,7 @@ import (
 	"github.com/apcera/termtables"
 	"sort"
 	"time"
+	"regexp"
 )
 
 type ByName []Node
@@ -115,7 +116,20 @@ func HumanizeSeconds(secs int64) string {
 
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int) {
+func (c *Cluster) FilterNodes(node_regex string) {
+	r, _ := regexp.Compile(node_regex)
+	var match_nodes  []Node
+
+	for _, node := range c.Nodes {
+		if r.MatchString(node.Name) {
+			match_nodes = append(match_nodes, node)
+		}
+	}
+
+	c.Nodes = match_nodes
+}
+
+func (c *Cluster) Print(node_regex string, show_processes bool, show_time bool, timeout_threshold int) {
 
 	table := termtables.CreateTable()
 
@@ -135,6 +149,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 	now := time.Now()
 
+	c.FilterNodes(node_regex)
 	for n_id, n := range c.Nodes {
 
 		timeout := now.Sub(n.Time).Seconds() > float64(timeout_threshold)

@@ -21,6 +21,8 @@ func main() {
 
 	showTimePtr := flag.Bool("t", false, "show time of events")
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
+	nodeRegex :=flag.String("n", ".", "match node-names with regex for display information " +
+                                      "(if not specified, all nodes will be shown)")
 	flag.Parse()
 
 	if err := nvml.InitNVML(); err != nil {
@@ -36,7 +38,7 @@ func main() {
 	log.Println("Cluster-SMI-Local is active. Press CTRL+C to shut down.")
 	for _ = range time.Tick(time.Duration(cfg.Tick) * time.Second) {
 		FetchNode(&cls.Nodes[0])
-		cls.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
+		cls.Print(*nodeRegex, *showProcessesPtr, *showTimePtr, cfg.Timeout)
 	}
 
 }
