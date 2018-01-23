@@ -33,9 +33,11 @@ Additional information are available, when using
 ```console
 user@host $ cluster-smi -h
 
-Usage of ./cluster-smi:
-  -p  verbose process information
-  -t  show time of events
+Usage of cluster-smi:
+  -n string
+        match node-names with regex for display information (if not specified, all nodes will be shown) (default ".")
+  -p	verbose process information
+  -t	show time of events
 
 ```
 
