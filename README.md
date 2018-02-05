@@ -88,7 +88,7 @@ Unfortunately, *ZMQ* can only be dynamically linked (`libzmq.so`) to this reposi
 ```bash
 # compile ZMQ library for c++
 cd /path/to/your_lib_folder
-wget https://archive.org/download/zeromq_4.1.0/zeromq-4.1.0-rc1.tar.gz
+wget http:/files.patwie.com/mirror/zeromq-4.1.0-rc1.tar.gz
 tar -xf zeromq-4.1.0-rc1.tar.gz
 cd zeromq-4.1.0
 ./autogen.sh
