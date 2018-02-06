@@ -36,10 +36,12 @@ func main() {
 	cls.Nodes = append(cls.Nodes, node)
 
 	log.Println("Cluster-SMI-Local is active. Press CTRL+C to shut down.")
-	for _ = range time.Tick(time.Duration(cfg.Tick) * time.Second) {
+
+	for {
 		FetchNode(&cls.Nodes[0])
 		cls.FilterNodes(*nodeRegex)
 		cls.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
+		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 
 }
