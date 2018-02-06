@@ -95,14 +95,18 @@ func HumanizeSeconds(secs int64) string {
 		has_prefix = true
 	} else {
 		if has_prefix {
-			answer = fmt.Sprintf("%s  0 min ", answer)
+			answer = fmt.Sprintf("%s  0 min", answer)
 		} else {
 			answer = fmt.Sprintf("%s     ", answer)
 		}
 
 	}
 	if seconds > 0 {
-		answer = fmt.Sprintf("%s %2d sec", answer, seconds)
+		if has_prefix {
+			answer = fmt.Sprintf("%s %2d sec", answer, seconds)
+		} else {
+			answer = fmt.Sprintf("%s   %2d sec", answer, seconds)
+		}
 		has_prefix = true
 	} else {
 		if has_prefix {
@@ -230,7 +234,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 							} else {
 								tableRow = append(tableRow, node_lastseen)
-
+								//FIXME
 							}
 						}
 
@@ -281,6 +285,6 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 		}
 	}
 	fmt.Printf("\033[2J")
-	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006"))
+	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006") + " (http://github.com/patwie/cluster-smi)")
 	fmt.Println(table.Render())
 }
