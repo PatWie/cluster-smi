@@ -133,7 +133,7 @@ func (c *Cluster) FilterNodes(node_regex string) {
 	c.Nodes = match_nodes
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int) {
+func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool) {
 
 	table := termtables.CreateTable()
 
@@ -251,6 +251,9 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					}
 
 				} else {
+					if len(d.Processes) == 0 && useColor {
+						device_name = fmt.Sprintf("\033[0;32m%s\033[0m", device_name)
+					}
 
 					tableRow := []interface{}{
 						node_name,

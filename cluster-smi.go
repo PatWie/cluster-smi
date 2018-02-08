@@ -28,6 +28,7 @@ func main() {
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
 	nodeRegex := flag.String("n", ".", "match node-names with regex for display information "+
 		"(if not specified, all nodes will be shown)")
+	useColor := flag.Bool("color", true, "use colored output")
 	flag.Parse()
 
 	request_attempts := 0
@@ -77,7 +78,7 @@ func main() {
 		err = msgpack.Unmarshal(s, &clus)
 		clus.Sort()
 		clus.FilterNodes(*nodeRegex)
-		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
+		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor)
 		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 

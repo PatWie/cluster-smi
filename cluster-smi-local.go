@@ -23,6 +23,7 @@ func main() {
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
 	nodeRegex := flag.String("n", ".", "match node-names with regex for display information "+
 		"(if not specified, all nodes will be shown)")
+	useColor := flag.Bool("color", true, "use colored output")
 	flag.Parse()
 
 	if err := nvml.InitNVML(); err != nil {
@@ -40,7 +41,7 @@ func main() {
 	for {
 		FetchNode(&cls.Nodes[0])
 		cls.FilterNodes(*nodeRegex)
-		cls.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout)
+		cls.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor)
 		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 
