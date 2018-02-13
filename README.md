@@ -28,7 +28,7 @@ Thu Jan 18 21:35:51 2018
 +---------+------------------------+---------------------+----------+----------+
 ```
 
-Additional information are available, when using 
+Additional information are available, when using
 
 ```console
 user@host $ cluster-smi -h
@@ -210,7 +210,7 @@ Explanation:
 
 For flag `-p`
 - *Node* is hostname of the machine
-- *Gpu* lists all devices 
+- *Gpu* lists all devices
 - *Memory-Usage* lists used GPU memory
 - *Gpu-Util* current GPU utilization
 - *PID* process id of processes with active cuda context
@@ -222,5 +222,11 @@ For flag `-p`
 
 For flag `-t`
 - *Last Seen* timestamp of last message of the machine status
+
+For flag `-n`
+- filter all nodes and only show those matching the given regEx
+
+For flag `-u`
+- filter all information and only show those related to given user
 
 If the last message is older than 3 minutes, this list will print a "Timeout/Offline" in this line. Make sure the machine is running. Any new message will remove this note.

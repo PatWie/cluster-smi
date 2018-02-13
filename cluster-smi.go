@@ -28,6 +28,7 @@ func main() {
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
 	nodeRegex := flag.String("n", ".", "match node-names with regex for display information "+
 		"(if not specified, all nodes will be shown)")
+	usernameFilter := flag.String("u", "", "show all information only for specific user")
 	useColor := flag.Bool("color", true, "use colored output")
 	flag.Parse()
 
@@ -76,6 +77,11 @@ func main() {
 
 		var clus cluster.Cluster
 		err = msgpack.Unmarshal(s, &clus)
+
+		if *usernameFilter != ""{
+			clus = cluster.FilterByUser(clus, *usernameFilter)
+		}
+
 		clus.Sort()
 		clus.FilterNodes(*nodeRegex)
 		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor)

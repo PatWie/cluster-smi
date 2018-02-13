@@ -58,6 +58,41 @@ type Cluster struct {
 	Nodes []Node `json:"nodes"`
 }
 
+func FilterByUser(c Cluster, username string) Cluster{
+
+	var clus Cluster
+
+	for _, n := range c.Nodes {
+		var Devices []Device
+
+		for _, d := range n.Devices {
+			var Processes []Process
+			for _, p := range d.Processes{
+				if p.Username == username{
+					Processes = append(Processes, p)
+				}
+			}
+
+			if len(Processes) > 0{
+				current_device := Device{
+					d.Id, d.Name, d.Utilization, d.MemoryUtilization, Processes,
+				}
+				Devices = append(Devices, current_device)
+			}
+		}
+
+		if len(Devices) > 0{
+     current_node := Node{
+     	n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
+     }
+     clus.Nodes = append(clus.Nodes, current_node)
+		}
+
+	}
+
+	return clus
+}
+
 func (c *Cluster) Sort() {
 	sort.Sort(ByName(c.Nodes))
 }
