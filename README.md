@@ -72,7 +72,7 @@ Thu Jan 18 21:44:51 2018
 
 <p align="center"> <img src="./cluster-smi.jpg" width="100%"> </p>
 
-On each machine you want to monitor you need to start *cluster-smi-node*. They are sending information from the nvidia-driver to a *cluster-smi-router*, which further distribute these information to client (*cluster-smi*) when requested. Only the machines running *cluster-smi-node* require CUDA dependencies.
+On each machine you want to monitor you need to start *cluster-smi-node*. They are sending information from the nvidia-driver to a *cluster-smi-router*, which further distributes these information to client (*cluster-smi*) when requested. Only the machines running *cluster-smi-node* require CUDA dependencies.
 
 You might be interested as well in [cluster-top](https://github.com/PatWie/cluster-top) for CPUS.
 
@@ -131,6 +131,9 @@ Otherwise, you can specify the environment variable `CLUSTER_SMI_CONFIG_PATH` po
 Then run
 
 ```bash
+cd proc
+go install
+cd ..
 make all
 ```
 
