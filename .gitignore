@@ -1,2 +1,9 @@
 cluster-smi.yml
 config.go
+
+.local/
+cluster-smi
+cluster-smi-local
+cluster-smi-node
+cluster-smi-router
+comd.sh
