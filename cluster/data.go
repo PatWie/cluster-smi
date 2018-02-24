@@ -3,6 +3,7 @@ package cluster
 import (
 	"fmt"
 	"github.com/apcera/termtables"
+	"os/user"
 	"regexp"
 	"sort"
 	"time"
@@ -58,7 +59,7 @@ type Cluster struct {
 	Nodes []Node `json:"nodes"`
 }
 
-func FilterByUser(c Cluster, username string) Cluster{
+func FilterByUser(c Cluster, username string) Cluster {
 
 	var clus Cluster
 
@@ -67,13 +68,13 @@ func FilterByUser(c Cluster, username string) Cluster{
 
 		for _, d := range n.Devices {
 			var Processes []Process
-			for _, p := range d.Processes{
-				if p.Username == username{
+			for _, p := range d.Processes {
+				if p.Username == username {
 					Processes = append(Processes, p)
 				}
 			}
 
-			if len(Processes) > 0{
+			if len(Processes) > 0 {
 				current_device := Device{
 					d.Id, d.Name, d.Utilization, d.MemoryUtilization, Processes,
 				}
@@ -81,11 +82,11 @@ func FilterByUser(c Cluster, username string) Cluster{
 			}
 		}
 
-		if len(Devices) > 0{
-     current_node := Node{
-     	n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
-     }
-     clus.Nodes = append(clus.Nodes, current_node)
+		if len(Devices) > 0 {
+			current_node := Node{
+				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
+			}
+			clus.Nodes = append(clus.Nodes, current_node)
 		}
 
 	}
@@ -168,6 +169,10 @@ func (c *Cluster) FilterNodes(node_regex string) {
 	c.Nodes = match_nodes
 }
 
+func highlight(s string) string {
+	return fmt.Sprintf("\033[0;33m%s\033[0m", s)
+}
+
 func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool) {
 
 	table := termtables.CreateTable()
@@ -187,6 +192,8 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 	table.AddHeaders(tableHeader...)
 
 	now := time.Now()
+
+	currentUser, _ := user.Current()
 
 	for n_id, n := range c.Nodes {
 
@@ -250,16 +257,34 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_utilization = ""
 						}
 
+						processUseGPUMemory := fmt.Sprintf("%3d MiB", p.UsedGpuMemory/1024/1024)
+						processRuntime := HumanizeSeconds(p.RunTime)
+						processPID := fmt.Sprintf("%v", p.Pid)
+						processUsername := p.Username
+						processName := p.Name
+
+						if p.Username == currentUser.Name {
+							node_name = highlight(node_name)
+							device_name = highlight(device_name)
+							device_MemoryInfo = highlight(device_MemoryInfo)
+							device_utilization = highlight(device_utilization)
+							processPID = highlight(fmt.Sprintf("%v", p.Pid))
+							processUsername = highlight(processUsername)
+							processName = highlight(processName)
+							processUseGPUMemory = highlight(processUseGPUMemory)
+							processRuntime = highlight(processRuntime)
+						}
+
 						tableRow := []interface{}{
 							node_name,
 							device_name,
 							device_MemoryInfo,
 							device_utilization,
-							p.Pid,
-							p.Username,
-							p.Name,
-							fmt.Sprintf("%3d MiB", p.UsedGpuMemory/1024/1024),
-							HumanizeSeconds(p.RunTime),
+							processPID,
+							processUsername,
+							processName,
+							processUseGPUMemory,
+							processRuntime,
 						}
 						// fmt.Sprintf("%s (%d, %s) %3d MiB %v", p.Name, p.Pid, p.Username, p.UsedGpuMemory/1024/1024, p.RunTime),
 
@@ -322,7 +347,32 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 			table.AddSeparator()
 		}
 	}
-	fmt.Printf("\033[2J")
+	// fmt.Printf("\033[2J")
+	// fmt.Printf("\033[0;30m color here \033[0m") // Black - Regular
+	// fmt.Printf("\033[0;31m color here \033[0m") // Red
+	// fmt.Printf("\033[0;32m color here \033[0m") // Green
+	// fmt.Printf("\033[0;33m color here \033[0m") // Yellow
+	// fmt.Printf("\033[0;34m color here \033[0m") // Blue
+	// fmt.Printf("\033[0;35m color here \033[0m") // Purple
+	// fmt.Printf("\033[0;36m color here \033[0m") // Cyan
+	// fmt.Printf("\033[0;37m color here \033[0m") // White
+	// fmt.Printf("\033[1;30m color here \033[0m") // Black - Bold
+	// fmt.Printf("\033[1;31m color here \033[0m") // Red
+	// fmt.Printf("\033[1;32m color here \033[0m") // Green
+	// fmt.Printf("\033[1;33m color here \033[0m") // Yellow
+	// fmt.Printf("\033[1;34m color here \033[0m") // Blue
+	// fmt.Printf("\033[1;35m color here \033[0m") // Purple
+	// fmt.Printf("\033[1;36m color here \033[0m") // Cyan
+	// fmt.Printf("\033[1;37m color here \033[0m") // White
+	// fmt.Printf("\033[4;30m color here \033[0m") // Black - Underline
+	// fmt.Printf("\033[4;31m color here \033[0m") // Red
+	// fmt.Printf("\033[4;32m color here \033[0m") // Green
+	// fmt.Printf("\033[4;33m color here \033[0m") // Yellow
+	// fmt.Printf("\033[4;34m color here \033[0m") // Blue
+	// fmt.Printf("\033[4;35m color here \033[0m") // Purple
+	// fmt.Printf("\033[4;36m color here \033[0m") // Cyan
+	// fmt.Printf("\033[4;37m color here \033[0m") // White
+	// fmt.Printf("\033[0m color here \033[0m")
 	fmt.Println(time.Now().Format("Mon Jan 2 15:04:05 2006") + " (http://github.com/patwie/cluster-smi)")
 	fmt.Println(table.Render())
 }
