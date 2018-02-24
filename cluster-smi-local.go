@@ -20,6 +20,7 @@ func main() {
 	cfg := LoadConfig()
 
 	showTimePtr := flag.Bool("t", false, "show time of events")
+	showExtendedPtr := flag.Bool("e", false, "extended view")
 	showProcessesPtr := flag.Bool("p", false, "verbose process information")
 	nodeRegex := flag.String("n", ".", "match node-names with regex for display information "+
 		"(if not specified, all nodes will be shown)")
@@ -42,12 +43,12 @@ func main() {
 	for {
 		FetchNode(&clus.Nodes[0])
 
-		if *usernameFilter != ""{
+		if *usernameFilter != "" {
 			clus = cluster.FilterByUser(clus, *usernameFilter)
 		}
 
 		clus.FilterNodes(*nodeRegex)
-		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor)
+		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor, *showExtendedPtr)
 		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 

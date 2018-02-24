@@ -24,11 +24,12 @@ type Memory struct {
 }
 
 type Process struct {
-	Pid           int
-	UsedGpuMemory int64
-	Name          string
-	Username      string
-	RunTime       int64
+	Pid             int
+	UsedGpuMemory   int64
+	Name            string
+	Username        string
+	RunTime         int64
+	ExtendedCommand string
 }
 
 type Device struct {
@@ -58,7 +59,7 @@ type Cluster struct {
 	Nodes []Node `json:"nodes"`
 }
 
-func FilterByUser(c Cluster, username string) Cluster{
+func FilterByUser(c Cluster, username string) Cluster {
 
 	var clus Cluster
 
@@ -67,13 +68,13 @@ func FilterByUser(c Cluster, username string) Cluster{
 
 		for _, d := range n.Devices {
 			var Processes []Process
-			for _, p := range d.Processes{
-				if p.Username == username{
+			for _, p := range d.Processes {
+				if p.Username == username {
 					Processes = append(Processes, p)
 				}
 			}
 
-			if len(Processes) > 0{
+			if len(Processes) > 0 {
 				current_device := Device{
 					d.Id, d.Name, d.Utilization, d.MemoryUtilization, Processes,
 				}
@@ -81,11 +82,11 @@ func FilterByUser(c Cluster, username string) Cluster{
 			}
 		}
 
-		if len(Devices) > 0{
-     current_node := Node{
-     	n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
-     }
-     clus.Nodes = append(clus.Nodes, current_node)
+		if len(Devices) > 0 {
+			current_node := Node{
+				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
+			}
+			clus.Nodes = append(clus.Nodes, current_node)
 		}
 
 	}
@@ -168,7 +169,7 @@ func (c *Cluster) FilterNodes(node_regex string) {
 	c.Nodes = match_nodes
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool) {
+func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool, extended bool) {
 
 	table := termtables.CreateTable()
 
@@ -250,6 +251,12 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_utilization = ""
 						}
 
+						cmdName := p.Name
+						if extended {
+							cmdName = fmt.Sprintf("%.55s", p.ExtendedCommand)
+							// cmdName =
+						}
+
 						tableRow := []interface{}{
 							node_name,
 							device_name,
@@ -257,7 +264,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_utilization,
 							p.Pid,
 							p.Username,
-							p.Name,
+							cmdName,
 							fmt.Sprintf("%3d MiB", p.UsedGpuMemory/1024/1024),
 							HumanizeSeconds(p.RunTime),
 						}

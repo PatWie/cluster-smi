@@ -2,6 +2,7 @@
 #ifndef GOCODE_Proc_H
 #define GOCODE_Proc_H
 
+void get_cmd(unsigned long  pid, char* cmd);
 void clock_ticks(long int *hz);
 void time_of_day(float *current_time);
 int boot_time(float *uptime, float *idle);

@@ -5,7 +5,10 @@ package proc
 import "C"
 import "unsafe"
 import "errors"
+import "strconv"
+import "io/ioutil"
 
+// PIDInfo is a collection of properties for a process
 type PIDInfo struct {
 	PID       int
 	Command   string
@@ -14,19 +17,21 @@ type PIDInfo struct {
 	UpTime    int64
 }
 
+// ClockTicks returns ticks per clock cycle
 func ClockTicks() int64 {
 	hz := C.long(0)
 	C.clock_ticks(&hz)
 	return int64(hz)
 }
 
+// TimeOfDay returns current time-stamp
 func TimeOfDay() int64 {
 	val := C.float(0)
 	C.time_of_day(&val)
 	return int64(val)
 }
 
-// returns timestamps when machine was started
+// BootTime returns timestamps when machine was started
 func BootTime() (int64, error) {
 	uptime := C.float(0)
 	idletime := C.float(0)
@@ -45,28 +50,28 @@ func mallocCStringBuffer(size uint) *C.char {
 	return C.CString(string(buf))
 }
 
-// CpuTick returns the total number of Jiffies
-func CpuTick() (t int64) {
+// CPUTick returns the total number of Jiffies
+func CPUTick() (t int64) {
 	return int64(C.read_cpu_tick())
 }
 
-// TimeAndNameFromPID returns used time (int) and command (string)
+// InfoFromPid returns used time (int) and command (string)
 func InfoFromPid(pid int) PIDInfo {
 
 	info := PIDInfo{}
 
-	used_time := C.ulong(0)
-	starttime := C.ulonglong(0)
+	usedTime := C.ulong(0)
+	startTime := C.ulonglong(0)
 
-	var c_dst *C.char = mallocCStringBuffer(128 + 1)
-	defer C.free(unsafe.Pointer(c_dst))
+	var cDst *C.char = mallocCStringBuffer(128 + 1)
+	defer C.free(unsafe.Pointer(cDst))
 
-	C.read_pid_info(C.ulong(pid), &used_time, &starttime, c_dst)
+	C.read_pid_info(C.ulong(pid), &usedTime, &startTime, cDst)
 
 	info.PID = pid
-	info.Command = C.GoString(c_dst)
-	info.UsedTime = int64(used_time)
-	info.StartTime = int64(starttime)
+	info.Command = C.GoString(cDst)
+	info.UsedTime = int64(usedTime)
+	info.StartTime = int64(startTime)
 
 	return info
 }
@@ -76,20 +81,36 @@ func NumberCPUCores() (n int) {
 	return int(C.num_cores())
 }
 
-// Find user id (UID) for a given process id (PID)
+// UIDFromPID returns user id (UID) for a given process id (PID)
 func UIDFromPID(pid int) (uid int) {
-	c_uid := C.ulong(0)
-	C.get_uid_from_pid(C.ulong(pid), &c_uid)
-	return int(c_uid)
+	cUID := C.ulong(0)
+	C.get_uid_from_pid(C.ulong(pid), &cUID)
+	return int(cUID)
 }
 
-// get memory information of RAM
+// CmdFromPID returns cmd which initiated the process
+func CmdFromPID(pid int) string {
+	fn := "/proc/" + strconv.Itoa(pid) + "/cmdline"
+	b, err := ioutil.ReadFile(fn) // just pass the file name
+	if err != nil {
+		return "unkown"
+	}
+
+	return string(b)
+	// var cCMD *C.char = mallocCStringBuffer(128 + 1)
+	// defer C.free(unsafe.Pointer(cCMD))
+
+	// C.get_cmd(C.ulong(pid), cCMD)
+
+	// return C.GoString(cCMD)
+}
+
+// GetRAMMemoryInfo returns memory information of RAM
 func GetRAMMemoryInfo() (total int64, free int64, available int64) {
-	c_total := C.ulong(0)
-	c_free := C.ulong(0)
-	c_available := C.ulong(0)
+	cTotal := C.ulong(0)
+	cFree := C.ulong(0)
+	cAvailable := C.ulong(0)
+	C.get_mem(&cTotal, &cFree, &cAvailable)
 
-	C.get_mem(&c_total, &c_free, &c_available)
-
-	return int64(c_total), int64(c_free), int64(c_available)
+	return int64(cTotal), int64(cFree), int64(cAvailable)
 }

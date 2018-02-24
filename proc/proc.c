@@ -8,8 +8,33 @@
 
 #define MAX_NAME 128
 
-void clock_ticks(long int *hz){
+void clock_ticks(long int *hz) {
   *hz = sysconf(_SC_CLK_TCK);
+}
+
+void get_cmd(unsigned long  pid, char* cmd) {
+
+  char path[40];
+  snprintf(path, 40, "/proc/%ld/cmdline", pid);
+
+  printf("read from %s\n", path);
+
+  char line[100], *p;
+  FILE* fp;
+
+  fp = fopen(path, "r");
+  if (!fp)
+    return;
+
+  size_t len = 0;
+  ssize_t read;
+  while ((read = getline(&cmd, &len, fp)) != -1) {
+    printf("Retrieved line of length %zu :\n", read);
+    printf("%s", line);
+  }
+  // bool success = fscanf(fp, "%s", cmd) != EOF;
+  printf("found %s\n", cmd);
+  fclose(fp);
 }
 
 void get_mem(unsigned long *mem_total, unsigned long *mem_free, unsigned long *mem_available) {
@@ -33,13 +58,13 @@ void get_mem(unsigned long *mem_total, unsigned long *mem_free, unsigned long *m
   fclose(statusf);
 }
 
-void time_of_day(float *current_time){
+void time_of_day(float *current_time) {
   struct timeval tv;
   gettimeofday(&tv, 0);
   *current_time = (float) tv.tv_sec;
 }
 
-int boot_time(float *uptime, float *idle){
+int boot_time(float *uptime, float *idle) {
   FILE *fp;
   fp = fopen("/proc/uptime", "r");
   if (fp != NULL) {
@@ -122,8 +147,8 @@ void read_pid_info(unsigned long pid, unsigned long *time, unsigned long long *s
 
     (6) session       %d  The session ID of the process.
     (7) tty_nr        %d  The controlling terminal of the process.
-    (8) tpgid         %d  The ID of the foreground process group 
-    (9) flags         %u  The kernel flags word of the process. 
+    (8) tpgid         %d  The ID of the foreground process group
+    (9) flags         %u  The kernel flags word of the process.
 
     (10) minflt       %lu The number of minor faults the process has made
     (11) cminflt      %lu The number of minor faults that the process's waited-for children have made.
@@ -143,7 +168,7 @@ void read_pid_info(unsigned long pid, unsigned long *time, unsigned long long *s
     ...
     */
 
-    // extract                   1   2   3   4   5   6   7   8   9   10   11   12   13  14  15   16   17  18  19  20  21    22 
+    // extract                   1   2   3   4   5   6   7   8   9   10   11   12   13  14  15   16   17  18  19  20  21    22
     bool success = fscanf(fp, "%*d (%s %*c %*d %*d %*d %*d %*d %*u %*lu %*lu %*lu %*lu %lu %lu %*ld %*ld %*d %*d %*d %*d %llu",
                           name, &utime, &stime, starttime) != EOF;
     fclose(fp);

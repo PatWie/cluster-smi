@@ -79,12 +79,15 @@ func FetchNode(n *cluster.Node) {
 				username = user.Username
 			}
 
+			extendedCMD := proc.CmdFromPID(PID)
+
 			processes = append(processes, cluster.Process{
-				Pid:           PID,
-				UsedGpuMemory: deviceProcs[i].UsedGpuMemory,
-				Name:          pid_info.Command,
-				Username:      username,
-				RunTime:       (current_time - n.BootTime) - (pid_info.StartTime / n.ClockTicks),
+				Pid:             PID,
+				UsedGpuMemory:   deviceProcs[i].UsedGpuMemory,
+				Name:            pid_info.Command,
+				Username:        username,
+				RunTime:         (current_time - n.BootTime) - (pid_info.StartTime / n.ClockTicks),
+				ExtendedCommand: extendedCMD,
 			})
 		}
 
