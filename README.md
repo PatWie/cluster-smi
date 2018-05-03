@@ -102,6 +102,7 @@ Finally:
 
 ```
 export PKG_CONFIG_PATH=/path/to/your_lib_folder/zeromq-4.1.0/dist/lib/pkgconfig/:$PKG_CONFIG_PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/path/to/your_lib_folder/zeromq-4.1.0/dist/lib
 ```
 
 Edit the CFLAGS, LDFLAGS in file `nvvml/nvml.go` to match your setup.
