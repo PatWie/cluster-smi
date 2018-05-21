@@ -1,4 +1,4 @@
-tick: 1000               # tick for receiving data in milliseconds
+tick: 3               # tick for receiving data in seconds
 timeout: 180             # duration considered as timeout (machine is considered as offline after x sec)
 router_ip: 127.0.0.1     # ip of cluster-smi-server
 ports:
