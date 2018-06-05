@@ -1,5 +1,5 @@
 #pragma once
-#include <nvml.h>
+#include "nvml.h"
 #include <stdlib.h>
 
 typedef nvmlReturn_t (*getNvmlCharProperty) (nvmlDevice_t device , char *buf, unsigned int length);
