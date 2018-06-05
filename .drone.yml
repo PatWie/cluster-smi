@@ -1,0 +1,14 @@
+workspace:
+  base: /gocode
+  path: src/github.com/patwie/cluster-smi
+
+pipeline:
+  build:
+    image: clustersmi_dynamic
+    commands:
+      - cp config.example.go config.go
+      - cd proc && go install
+      - cd ../
+      - cd nvml && go install
+      - cd ../
+      - make
