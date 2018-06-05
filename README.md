@@ -79,6 +79,8 @@ You might be interested as well in [cluster-top](https://github.com/PatWie/clust
 
 ## Installation
 
+All steps below are used to test possible changes to this codebase. See the [dockerfile](https://github.com/PatWie/cluster-smi/blob/master/.drone/Dockerfile) and [specific steps](https://github.com/PatWie/cluster-smi/blob/master/.drone.yml) to compile this project in the provided files used by CI.
+
 ### Requirements + Dependencies
 
 - CUDA (just for `cluster-smi-node.go`)
