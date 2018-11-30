@@ -33,7 +33,7 @@ func InitNode(n *cluster.Node) {
 	devices, _ := nvml.GetDevices()
 
 	for i := 0; i < len(devices); i++ {
-		n.Devices = append(n.Devices, cluster.Device{0, "", 0, cluster.Memory{0, 0, 0, 0}, nil})
+		n.Devices = append(n.Devices, cluster.Device{0, "", 0, cluster.Memory{0, 0, 0, 0}, 0, 0, 0, nil})
 	}
 }
 
@@ -52,6 +52,9 @@ func FetchNode(n *cluster.Node) {
 		meminfo, _ := device.GetMemoryInfo()
 		gpuPercent, _, _ := device.GetUtilization()
 		memPercent := int(meminfo.Used / meminfo.Total)
+		powerUsage, _ := device.GetPowerUsage()
+ 		fanSpeed, _ := device.GetFanSpeed()
+ 		tempc, _, _ := device.GetTemperature()
 
 		// read processes
 		deviceProcs, err := device.GetProcessInfo()
@@ -95,6 +98,9 @@ func FetchNode(n *cluster.Node) {
 		n.Devices[idx].Name = device.DeviceName
 		n.Devices[idx].Utilization = gpuPercent
 		n.Devices[idx].MemoryUtilization = cluster.Memory{meminfo.Used, meminfo.Free, meminfo.Total, memPercent}
+		n.Devices[idx].FanSpeed = fanSpeed
+ 		n.Devices[idx].PowerUsage = powerUsage
+ 		n.Devices[idx].Temperature = tempc
 		n.Devices[idx].Processes = processes
 
 	}

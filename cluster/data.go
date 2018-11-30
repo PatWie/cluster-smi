@@ -38,6 +38,9 @@ type Device struct {
 	Name              string `json:"name"`
 	Utilization       int    `json:"utilization"`
 	MemoryUtilization Memory `json:"memory"`
+	FanSpeed          int    `json:"fan_speed"`
+ 	Temperature       int    `json:"temperature"`
+ 	PowerUsage        int    `json:"power_usage"`
 	Processes         []Process
 }
 
@@ -77,7 +80,8 @@ func FilterByUser(c Cluster, username string) Cluster {
 
 			if len(Processes) > 0 {
 				current_device := Device{
-					d.Id, d.Name, d.Utilization, d.MemoryUtilization, Processes,
+					d.Id, d.Name, d.Utilization, d.MemoryUtilization,
+ 					d.FanSpeed, d.Temperature, d.PowerUsage, Processes,
 				}
 				Devices = append(Devices, current_device)
 			}
@@ -174,12 +178,17 @@ func highlight(s string) string {
 	return fmt.Sprintf("\033[0;33m%s\033[0m", s)
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool, extended bool) {
+func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool, extended bool, show_detail bool) {
 
 	table := termtables.CreateTable()
 
 	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util"}
 
+	if show_detail {
+		tableHeader = append(tableHeader, "Fan")
+		tableHeader = append(tableHeader, "Temp")
+		tableHeader = append(tableHeader, "Power")
+	}
 	if show_processes {
 		tableHeader = append(tableHeader, "PID")
 		tableHeader = append(tableHeader, "User")
@@ -211,6 +220,10 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 				"",
 			}
 
+			if show_detail {
+				tableRow = append(tableRow, []interface{}{"", "", ""}...)
+			}
+
 			if show_processes {
 				tableRow = append(tableRow, []interface{}{"", "", "", "", ""}...)
 			}
@@ -235,7 +248,16 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					d.MemoryUtilization.Total/1024/1024,
 					int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
 				device_utilization := fmt.Sprintf("%3d %%", d.Utilization)
-
+				
+  				device_FanSpeed := ""
+				device_Temp := ""
+				device_PowerUtil := ""
+				if show_detail {
+  					device_FanSpeed = fmt.Sprintf("%3d %%", d.FanSpeed)
+					device_Temp = fmt.Sprintf("%3d C", d.Temperature)
+					device_PowerUtil = fmt.Sprintf("%3dW", d.PowerUsage)
+				}
+				
 				if timeout {
 					device_MemoryInfo = "TimeOut"
 					device_utilization = "TimeOut"
@@ -256,6 +278,11 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_name = ""
 							device_MemoryInfo = ""
 							device_utilization = ""
+							if show_detail {
+								device_FanSpeed = ""
+ 								device_Temp = ""
+ 								device_PowerUtil = ""
+							}
 						}
 
 						processName := p.Name
@@ -272,6 +299,11 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_name = highlight(device_name)
 							device_MemoryInfo = highlight(device_MemoryInfo)
 							device_utilization = highlight(device_utilization)
+							if show_detail {
+							   device_FanSpeed = highlight(device_FanSpeed)
+							   device_Temp = highlight(device_Temp)
+							   device_PowerUtil = highlight(device_PowerUtil)
+							}
 							processPID = highlight(fmt.Sprintf("%v", p.Pid))
 							processUsername = highlight(processUsername)
 							processName = highlight(processName)
@@ -284,12 +316,22 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_name,
 							device_MemoryInfo,
 							device_utilization,
-							processPID,
-							processUsername,
-							processName,
-							processUseGPUMemory,
-							processRuntime,
 						}
+						if show_detail {
+							tableRow = append(tableRow, []interface{}{
+								device_FanSpeed,
+ 								device_Temp,
+ 								device_PowerUtil,
+								}...)
+						}
+						tableRow = append(tableRow, []interface{}{
+							   	processPID,
+								processUsername,
+								processName,
+								processUseGPUMemory,
+								processRuntime,
+							}...)
+
 						// fmt.Sprintf("%s (%d, %s) %3d MiB %v", p.Name, p.Pid, p.Username, p.UsedGpuMemory/1024/1024, p.RunTime),
 
 						if show_time {
@@ -324,6 +366,14 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						device_name,
 						device_MemoryInfo,
 						device_utilization,
+					}
+
+					if show_detail {
+						tableRow = append(tableRow, []interface{}{
+							device_FanSpeed,
+							device_Temp,
+							device_PowerUtil,
+							}...)
 					}
 
 					if show_processes {
