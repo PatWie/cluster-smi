@@ -1,5 +1,5 @@
 [Unit]
-Description=Cluster-Smi-Node
+Description=Cluster-Smi-Router
 
 After=network.target local-fs.target multi-user.target
 Requires=network.target local-fs.target multi-user.target
@@ -8,9 +8,9 @@ Requires=network.target local-fs.target multi-user.target
 [Service]
 Type=simple
 StandardOutput=journal+console
-ExecStart=/path/to/cluster-smi-node
+ExecStart=/path/to/cluster-smi-router
 
 [Install]
 WantedBy=multi-user.target
 
-## Add me by: sudo systemctl enable cluster-smi-node.service
+## Add me by: sudo systemctl enable cluster-smi-router.service
