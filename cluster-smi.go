@@ -87,7 +87,7 @@ func main() {
 		clus.Sort()
 		clus.FilterNodes(*nodeRegex)
 		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor, *showExtendedPtr, *showDetailPtr)
-		time.Sleep(time.Duration(cfg.Tick) * time.Second)
+		break
 	}
 
 }
