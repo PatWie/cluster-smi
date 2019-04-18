@@ -182,6 +182,8 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 	table := termtables.CreateTable()
 
+	table.SetModeHTML()
+
 	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util"}
 
 	if show_detail {

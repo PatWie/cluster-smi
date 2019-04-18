@@ -23,7 +23,7 @@ type htmlStyleRules struct {
 }
 
 // HTML returns an HTML representations of the contents of one row of a table.
-func (r *Row) HTML(tag string, style *renderStyle) string {
+func (r *Row) HTML(tag string, style *renderStyle, isSeparator bool) string {
 	attrs := make([]string, len(r.cells))
 	elems := make([]string, len(r.cells))
 	for i := range r.cells {
@@ -41,7 +41,11 @@ func (r *Row) HTML(tag string, style *renderStyle) string {
 	}
 	// WAG as to max capacity, plus a bit
 	buf := bytes.NewBuffer(make([]byte, 0, 8192))
-	buf.WriteString("<tr>")
+	if isSeparator {
+		buf.WriteString("<tr class=\"upperBorder\">")
+	} else {
+		buf.WriteString("<tr>")
+	}
 	for i := range elems {
 		fmt.Fprintf(buf, "<%s%s>%s</%s>", tag, attrs[i], elems[i], tag)
 	}
@@ -87,16 +91,20 @@ func (t *Table) RenderHTML() (buffer string) {
 			rowsText = append(rowsText, generateHtmlTitleRow(t.title, t, style))
 		}
 		if t.headers != nil {
-			rowsText = append(rowsText, CreateRow(t.headers).HTML("th", style))
+			rowsText = append(rowsText, CreateRow(t.headers).HTML("th", style, false))
 		}
 		rowsText = append(rowsText, "</thead>\n")
 	}
 
 	rowsText = append(rowsText, "<tbody>\n")
 	// loop over the elements and render them
+	nextRowHasBorder := false
 	for i := range t.elements {
 		if row, ok := t.elements[i].(*Row); ok {
-			rowsText = append(rowsText, row.HTML("td", style))
+			rowsText = append(rowsText, row.HTML("td", style, nextRowHasBorder))
+			nextRowHasBorder = false
+		} else if _, ok := t.elements[i].(*Separator); ok {
+			nextRowHasBorder = true
 		} else {
 			rowsText = append(rowsText, fmt.Sprintf("<!-- unable to render line %d, unhandled type -->\n", i))
 		}
