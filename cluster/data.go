@@ -50,6 +50,9 @@ type Node struct {
 	Time       time.Time `json:"time"`       // current timestamp from message
 	BootTime   int64     `json:"boot_time"`  // uptime of system
 	ClockTicks int64     `json:"clock_ticks` // cpu ticks per second
+	CPUUtil    float32   `json:"cpu_util"`   // cpu utilization
+	LastRun    uint64    `json:"last_run"`
+	LastIdle   uint64    `json:"last_idle"`
 }
 
 func (n *Node) Print() {
@@ -89,7 +92,7 @@ func FilterByUser(c Cluster, username string) Cluster {
 
 		if len(Devices) > 0 {
 			current_node := Node{
-				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
+				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks, n.CPUUtil, n.LastRun, n.LastIdle,
 			}
 			clus.Nodes = append(clus.Nodes, current_node)
 		}
@@ -184,7 +187,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 	table.SetModeHTML()
 
-	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util"}
+	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util", "CPU-Util"}
 
 	if show_detail {
 		tableHeader = append(tableHeader, "Fan")
@@ -220,6 +223,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 				"Offline",
 				"",
 				"",
+				"",
 			}
 
 			if show_detail {
@@ -250,16 +254,17 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					d.MemoryUtilization.Total/1024/1024,
 					int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
 				device_utilization := fmt.Sprintf("%3d %%", d.Utilization)
-				
-  				device_FanSpeed := ""
+				cpu_utilization := fmt.Sprintf("%.2f %%", n.CPUUtil * 100)
+
+				device_FanSpeed := ""
 				device_Temp := ""
 				device_PowerUtil := ""
 				if show_detail {
-  					device_FanSpeed = fmt.Sprintf("%3d %%", d.FanSpeed)
-					device_Temp = fmt.Sprintf("%3d C", d.Temperature)
+					device_FanSpeed = fmt.Sprintf("%3d %%", d.FanSpeed)
+					device_Temp = fmt.Sprintf("%3d °C", d.Temperature)
 					device_PowerUtil = fmt.Sprintf("%3dW", d.PowerUsage)
 				}
-				
+
 				if timeout {
 					device_MemoryInfo = "TimeOut"
 					device_utilization = "TimeOut"
@@ -267,6 +272,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 				if d_id > 0 {
 					node_name = ""
+					cpu_utilization = ""
 				}
 				if d_id > 0 || !show_time {
 					node_lastseen = ""
@@ -282,9 +288,10 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_utilization = ""
 							if show_detail {
 								device_FanSpeed = ""
- 								device_Temp = ""
- 								device_PowerUtil = ""
+								device_Temp = ""
+								device_PowerUtil = ""
 							}
+							cpu_utilization = ""
 						}
 
 						processName := p.Name
@@ -318,16 +325,17 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_name,
 							device_MemoryInfo,
 							device_utilization,
+							cpu_utilization,
 						}
 						if show_detail {
 							tableRow = append(tableRow, []interface{}{
 								device_FanSpeed,
- 								device_Temp,
- 								device_PowerUtil,
+								device_Temp,
+								device_PowerUtil,
 								}...)
 						}
 						tableRow = append(tableRow, []interface{}{
-							   	processPID,
+								processPID,
 								processUsername,
 								processName,
 								processUseGPUMemory,
@@ -349,12 +357,15 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						table.AddRow(tableRow...)
 						table.SetAlign(termtables.AlignRight, 3)
 						table.SetAlign(termtables.AlignCenter, 4)
-						if show_processes {
+						if show_processes && show_detail {
 							table.SetAlign(termtables.AlignRight, 5)
-							// table.SetAlign(termtables.AlignRight, 7)
+							table.SetAlign(termtables.AlignRight, 7)
 							table.SetAlign(termtables.AlignRight, 8)
 							table.SetAlign(termtables.AlignRight, 9)
-							// table.SetAlign(termtables.AlignRight, 9)
+							table.SetAlign(termtables.AlignRight, 10)
+							table.SetAlign(termtables.AlignRight, 11)
+							table.SetAlign(termtables.AlignRight, 12)
+							table.SetAlign(termtables.AlignRight, 13)
 						}
 					}
 
@@ -368,6 +379,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						device_name,
 						device_MemoryInfo,
 						device_utilization,
+						cpu_utilization,
 					}
 
 					if show_detail {

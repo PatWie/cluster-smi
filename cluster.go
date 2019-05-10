@@ -4,10 +4,12 @@ import (
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/nvml"
 	"github.com/patwie/cluster-smi/proc"
+	linuxproc "github.com/c9s/goprocinfo/linux"
 	"os"
 	"os/user"
 	"strconv"
 	"time"
+	"log"
 )
 
 // Cluster
@@ -104,4 +106,15 @@ func FetchNode(n *cluster.Node) {
 		n.Devices[idx].Processes = processes
 
 	}
+
+	stat, err := linuxproc.ReadStat("/proc/stat")
+	if err != nil {
+		log.Fatal("stat read fail")
+	}
+
+	statAll := stat.CPUStatAll
+	n.CPUUtil = float32(statAll.User + statAll.System - n.LastRun) / float32(statAll.User + statAll.System + statAll.Idle - n.LastRun - n.LastIdle)
+	//log.Println("Fetch /proc/stat", statAll.User, statAll.System, statAll.Idle)
+	n.LastRun = statAll.User + statAll.System
+	n.LastIdle = statAll.Idle
 }
