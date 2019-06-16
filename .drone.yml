@@ -1,14 +1,29 @@
+---
+kind: pipeline
+name: default
+
+platform:
+  os: linux
+  arch: amd64
+
 workspace:
   base: /gocode
   path: src/github.com/patwie/cluster-smi
 
-pipeline:
-  build:
-    image: clustersmi_dynamic
-    commands:
-      - cp config.example.go config.go
-      - cd proc && go install
-      - cd ../
-      - cd nvml && go install
-      - cd ../
-      - make
+steps:
+- name: build
+  pull: never
+  image: clustersmi_dynamic
+  commands:
+  - cp config.example.go config.go
+  - "cd proc && go install"
+  - cd ../
+  - "cd nvml && go install"
+  - cd ../
+  - make
+
+---
+kind: signature
+hmac: 78fab754f0990d8a292e5ba3a9e31195a826aaff6843890d24c1d2203d4312b0
+
+...
