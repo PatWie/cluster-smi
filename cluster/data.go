@@ -320,6 +320,10 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							processRuntime = highlight(processRuntime)
 						}
 
+						if d.Utilization < 10 {
+							device_utilization = fmt.Sprintf("\033[0;31m%s\033[0m", device_utilization)
+						}
+
 						tableRow := []interface{}{
 							node_name,
 							device_name,
