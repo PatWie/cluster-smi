@@ -7,6 +7,13 @@ all:
 	go build cluster-smi-router.go config.go
 	go build cluster-smi-node.go config.go cluster.go
 	go build cluster-smi-local.go config.go cluster.go
+
+# https://github.com/bazelbuild/bazel/issues/934#issuecomment-193474914
+# https://stackoverflow.com/a/23845391
+# https://github.com/pebbe/zmq4/issues/121
+# https://github.com/golang/go/issues/26492
+all: export CGO_LDFLAGS=-lstdc++ -pthread -lrt -lm
+
 clean:
 	cd proc; go clean
 	go clean
