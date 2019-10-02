@@ -5,6 +5,7 @@ import (
 	"github.com/patwie/cluster-smi/nvml"
 	"github.com/patwie/cluster-smi/proc"
 	linuxproc "github.com/c9s/goprocinfo/linux"
+	"fmt"
 	"os"
 	"os/user"
 	"strconv"
@@ -25,7 +26,12 @@ func InitNode(n *cluster.Node) {
 	if err != nil {
 		panic(err)
 	}
-	n.Name = name
+	host_comment := os.Getenv("HOST_COMMENT")
+	if host_comment != "" {
+		n.Name = fmt.Sprintf("%s (%s)", name, host_comment)
+	} else {
+		n.Name = name
+	}
 	n.Time = time.Now()
 
 	boot_time, _ := proc.BootTime()
