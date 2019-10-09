@@ -113,12 +113,22 @@ Otherwise, you can specify the environment variable `CLUSTER_SMI_CONFIG_PATH` po
 Then run
 
 ```bash
+git submodule update --init --recursive
 cd proc
 go install
 cd ..
 make all
 ```
 
+Alternatively, you can use the following Docker-based build approach, in which [Docker](https://www.docker.com/) is used to create a clean environment for building cluster-smi, and actually building happens in the container.
+
+```bash
+git submodule update --init --recursive
+cd docker
+./build-docker-image.sh
+cd ..
+./build-cluster-smi-in-docker.sh
+```
 
 ### Run
 
