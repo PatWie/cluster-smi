@@ -13,8 +13,10 @@ RUN yum -y update && yum -y install gcc-c++ make && \
     rpm -i cuda-repo-rhel7-${CUDA_VER}-1.x86_64.rpm && \
     bash -c 'TMP=${CUDA_VER%.*} ; yum -y install cuda-nvml-dev-${TMP/./-}'
 
+# Need to patch libzmq.pc.in due to https://github.com/zeromq/libzmq/issues/3710
 RUN tar xf zeromq-${ZEROMQ_VER}.tar.gz && \
     pushd /zeromq-${ZEROMQ_VER} && \
+    sed -i 's#@pkg_config_libs_private@#-lm @pkg_config_libs_private@#' src/libzmq.pc.in && \
     ./configure \
         --disable-shared \
         --enable-static \
