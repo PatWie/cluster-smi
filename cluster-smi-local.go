@@ -27,6 +27,7 @@ func main() {
 		"(if not specified, all nodes will be shown)")
 	usernameFilter := flag.String("u", "", "show all information only for specific user")
 	useColor := flag.Bool("color", true, "use colored output")
+	useHTML := flag.Bool("html", false, "use HTML output")
 	flag.Parse()
 
 	if err := nvml.InitNVML(); err != nil {
@@ -49,7 +50,7 @@ func main() {
 		}
 
 		clus.FilterNodes(*nodeRegex)
-		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor, *showExtendedPtr, *showDetailPtr)
+		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor, *useHTML, *showExtendedPtr, *showDetailPtr)
 		time.Sleep(time.Duration(cfg.Tick) * time.Second)
 	}
 

@@ -37,7 +37,7 @@ func (r *Row) HTML(tag string, style *renderStyle, isSeparator bool) string {
 				attrs[i] = " align='right'"
 			}
 		}
-		elems[i] = html.EscapeString(strings.TrimSpace(r.cells[i].Render(style)))
+		elems[i] = strings.TrimSpace(r.cells[i].Render(style))
 	}
 	// WAG as to max capacity, plus a bit
 	buf := bytes.NewBuffer(make([]byte, 0, 8192))
