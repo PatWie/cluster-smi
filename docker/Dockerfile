@@ -18,7 +18,7 @@ RUN make install
 
 FROM centos:7
 
-ARG GO_VER=1.13
+ARG GO_VER=1.13.8
 ARG CUDA_VER=8.0.61
 
 ADD https://dl.google.com/go/go${GO_VER}.linux-amd64.tar.gz \
