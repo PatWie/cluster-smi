@@ -18,6 +18,8 @@ RUN make install
 
 FROM centos:7
 
+# Kept as 1.13 as Go 1.14 does not play well with the pinned version of zmq4
+# https://github.com/pebbe/zmq4/issues/161
 ARG GO_VER=1.13.8
 ARG CUDA_VER=8.0.61
 
