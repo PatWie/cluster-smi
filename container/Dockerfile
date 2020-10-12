@@ -1,6 +1,6 @@
-FROM centos:7 AS zeromq_builder
+FROM docker.io/library/centos:7 AS zeromq_builder
 
-ARG ZEROMQ_VER=4.3.2
+ARG ZEROMQ_VER=4.3.3
 
 RUN yum -y update && yum -y install gcc-c++ make
 
@@ -10,13 +10,11 @@ RUN tar xf zeromq-${ZEROMQ_VER}.tar.gz
 
 WORKDIR /zeromq-${ZEROMQ_VER}
 
-# Need to patch libzmq.pc.in due to https://github.com/zeromq/libzmq/issues/3710
-RUN sed -i 's#@pkg_config_libs_private@#-lm @pkg_config_libs_private@#' src/libzmq.pc.in
 RUN ./configure --prefix=/opt/zeromq --disable-shared --enable-static --without-libsodium --disable-libunwind
 RUN make
 RUN make install
 
-FROM centos:7
+FROM docker.io/library/centos:7
 
 # Kept as 1.13 as Go 1.14 does not play well with the pinned version of zmq4
 # https://github.com/pebbe/zmq4/issues/161
