@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/pebbe/zmq4"
-	"github.com/vmihailenco/msgpack"
+	"github.com/vmihailenco/msgpack/v5"
 	"log"
 	"os"
 	"time"

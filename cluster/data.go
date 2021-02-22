@@ -2,7 +2,7 @@ package cluster
 
 import (
 	"fmt"
-	"github.com/apcera/termtables"
+	"github.com/brettski/go-termtables"
 	"os/user"
 	"regexp"
 	"sort"

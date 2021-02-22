@@ -4,7 +4,7 @@ import (
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/messaging"
 	"github.com/pebbe/zmq4"
-	"github.com/vmihailenco/msgpack"
+	"github.com/vmihailenco/msgpack/v5"
 	"log"
 	"sync"
 )
