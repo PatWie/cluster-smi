@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"errors"
 	"github.com/pebbe/zmq4"
 )
 
@@ -31,14 +32,29 @@ func ReceiveMultipartMessage(soc *zmq4.Socket) (m MultipartMessage, err error) {
 	var m_id []byte
 	var m_empty []byte
 	var m_body []byte
+	var rcv_more bool
 
 	m_id, err = soc.RecvBytes(0)
 	if err != nil {
 		return m, err
 	}
+	rcv_more, err = soc.GetRcvmore()
+	if err != nil {
+		return m, err
+	}
+	if !rcv_more {
+		return m, errors.New("Expect m_empty but no more data")
+	}
 	m_empty, err = soc.RecvBytes(0)
 	if err != nil {
 		return m, err
+	}
+	rcv_more, err = soc.GetRcvmore()
+	if err != nil {
+		return m, err
+	}
+	if !rcv_more {
+		return m, errors.New("Expect m_body but no more data")
 	}
 	m_body, err = soc.RecvBytes(0)
 	if err != nil {

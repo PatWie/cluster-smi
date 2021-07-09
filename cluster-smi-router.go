@@ -80,7 +80,8 @@ func main() {
 		// read request of client
 		msg, err := messaging.ReceiveMultipartMessage(router_socket)
 		if err != nil {
-			panic(err)
+			log.Println(err)
+			continue
 		}
 
 		mutex.Lock()

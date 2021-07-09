@@ -1,7 +1,9 @@
 package zmq4
 
 /*
-#cgo !windows pkg-config: libzmq
+// Need to specify --static manually
+// https://github.com/golang/go/issues/26492
+#cgo !windows pkg-config: --static libzmq
 #cgo windows CFLAGS: -I/usr/local/include
 #cgo windows LDFLAGS: -L/usr/local/lib -lzmq
 #include <zmq.h>

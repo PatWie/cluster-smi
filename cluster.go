@@ -4,10 +4,13 @@ import (
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/nvml"
 	"github.com/patwie/cluster-smi/proc"
+	linuxproc "github.com/c9s/goprocinfo/linux"
+	"fmt"
 	"os"
 	"os/user"
 	"strconv"
 	"time"
+	"log"
 )
 
 // Cluster
@@ -23,7 +26,12 @@ func InitNode(n *cluster.Node) {
 	if err != nil {
 		panic(err)
 	}
-	n.Name = name
+	host_comment := os.Getenv("HOST_COMMENT")
+	if host_comment != "" {
+		n.Name = fmt.Sprintf("%s (%s)", name, host_comment)
+	} else {
+		n.Name = name
+	}
 	n.Time = time.Now()
 
 	boot_time, _ := proc.BootTime()
@@ -104,4 +112,15 @@ func FetchNode(n *cluster.Node) {
 		n.Devices[idx].Processes = processes
 
 	}
+
+	stat, err := linuxproc.ReadStat("/proc/stat")
+	if err != nil {
+		log.Fatal("stat read fail")
+	}
+
+	statAll := stat.CPUStatAll
+	n.CPUUtil = float32(statAll.User + statAll.System - n.LastRun) / float32(statAll.User + statAll.System + statAll.Idle - n.LastRun - n.LastIdle)
+	//log.Println("Fetch /proc/stat", statAll.User, statAll.System, statAll.Idle)
+	n.LastRun = statAll.User + statAll.System
+	n.LastIdle = statAll.Idle
 }

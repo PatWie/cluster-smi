@@ -50,6 +50,9 @@ type Node struct {
 	Time       time.Time `json:"time"`       // current timestamp from message
 	BootTime   int64     `json:"boot_time"`  // uptime of system
 	ClockTicks int64     `json:"clock_ticks` // cpu ticks per second
+	CPUUtil    float32   `json:"cpu_util"`   // cpu utilization
+	LastRun    uint64    `json:"last_run"`
+	LastIdle   uint64    `json:"last_idle"`
 }
 
 func (n *Node) Print() {
@@ -89,7 +92,7 @@ func FilterByUser(c Cluster, username string) Cluster {
 
 		if len(Devices) > 0 {
 			current_node := Node{
-				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks,
+				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks, n.CPUUtil, n.LastRun, n.LastIdle,
 			}
 			clus.Nodes = append(clus.Nodes, current_node)
 		}
@@ -174,15 +177,23 @@ func (c *Cluster) FilterNodes(node_regex string) {
 	c.Nodes = match_nodes
 }
 
-func highlight(s string) string {
-	return fmt.Sprintf("\033[0;33m%s\033[0m", s)
+func highlight(s string, useHTML bool) string {
+	if useHTML {
+		return fmt.Sprintf("<span style=\"color: yellow\">%s</span>", s)
+	} else {
+		return fmt.Sprintf("\033[0;33m%s\033[0m", s)
+	}
 }
 
-func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool, extended bool, show_detail bool) {
+func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold int, useColor bool, useHTML bool, extended bool, show_detail bool) {
 
 	table := termtables.CreateTable()
 
-	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util"}
+	if useHTML {
+		table.SetModeHTML()
+	}
+
+	tableHeader := []interface{}{"Node", "Gpu", "Memory-Usage", "GPU-Util", "CPU-Util"}
 
 	if show_detail {
 		tableHeader = append(tableHeader, "Fan")
@@ -218,6 +229,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 				"Offline",
 				"",
 				"",
+				"",
 			}
 
 			if show_detail {
@@ -248,16 +260,17 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 					d.MemoryUtilization.Total/1024/1024,
 					int(d.MemoryUtilization.Used*100/d.MemoryUtilization.Total))
 				device_utilization := fmt.Sprintf("%3d %%", d.Utilization)
-				
-  				device_FanSpeed := ""
+				cpu_utilization := fmt.Sprintf("%.2f %%", n.CPUUtil * 100)
+
+				device_FanSpeed := ""
 				device_Temp := ""
 				device_PowerUtil := ""
 				if show_detail {
-  					device_FanSpeed = fmt.Sprintf("%3d %%", d.FanSpeed)
-					device_Temp = fmt.Sprintf("%3d C", d.Temperature)
+					device_FanSpeed = fmt.Sprintf("%3d %%", d.FanSpeed)
+					device_Temp = fmt.Sprintf("%3d °C", d.Temperature)
 					device_PowerUtil = fmt.Sprintf("%3dW", d.PowerUsage)
 				}
-				
+
 				if timeout {
 					device_MemoryInfo = "TimeOut"
 					device_utilization = "TimeOut"
@@ -265,6 +278,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 				if d_id > 0 {
 					node_name = ""
+					cpu_utilization = ""
 				}
 				if d_id > 0 || !show_time {
 					node_lastseen = ""
@@ -280,9 +294,10 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_utilization = ""
 							if show_detail {
 								device_FanSpeed = ""
- 								device_Temp = ""
- 								device_PowerUtil = ""
+								device_Temp = ""
+								device_PowerUtil = ""
 							}
+							cpu_utilization = ""
 						}
 
 						processName := p.Name
@@ -295,20 +310,28 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						processPID := fmt.Sprintf("%v", p.Pid)
 						processUsername := p.Username
 						if p.Username == currentUser.Username {
-							node_name = highlight(node_name)
-							device_name = highlight(device_name)
-							device_MemoryInfo = highlight(device_MemoryInfo)
-							device_utilization = highlight(device_utilization)
+							node_name = highlight(node_name, useHTML)
+							device_name = highlight(device_name, useHTML)
+							device_MemoryInfo = highlight(device_MemoryInfo, useHTML)
+							device_utilization = highlight(device_utilization, useHTML)
 							if show_detail {
-							   device_FanSpeed = highlight(device_FanSpeed)
-							   device_Temp = highlight(device_Temp)
-							   device_PowerUtil = highlight(device_PowerUtil)
+							   device_FanSpeed = highlight(device_FanSpeed, useHTML)
+							   device_Temp = highlight(device_Temp, useHTML)
+							   device_PowerUtil = highlight(device_PowerUtil, useHTML)
 							}
-							processPID = highlight(fmt.Sprintf("%v", p.Pid))
-							processUsername = highlight(processUsername)
-							processName = highlight(processName)
-							processUseGPUMemory = highlight(processUseGPUMemory)
-							processRuntime = highlight(processRuntime)
+							processPID = highlight(fmt.Sprintf("%v", p.Pid), useHTML)
+							processUsername = highlight(processUsername, useHTML)
+							processName = highlight(processName, useHTML)
+							processUseGPUMemory = highlight(processUseGPUMemory, useHTML)
+							processRuntime = highlight(processRuntime, useHTML)
+						}
+
+						if d.Utilization < 10 {
+							if useHTML {
+								device_utilization = fmt.Sprintf("<span style=\"color: red\">%s</span>", device_utilization)
+							} else {
+								device_utilization = fmt.Sprintf("\033[0;31m%s\033[0m", device_utilization)
+							}
 						}
 
 						tableRow := []interface{}{
@@ -316,16 +339,17 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							device_name,
 							device_MemoryInfo,
 							device_utilization,
+							cpu_utilization,
 						}
 						if show_detail {
 							tableRow = append(tableRow, []interface{}{
 								device_FanSpeed,
- 								device_Temp,
- 								device_PowerUtil,
+								device_Temp,
+								device_PowerUtil,
 								}...)
 						}
 						tableRow = append(tableRow, []interface{}{
-							   	processPID,
+								processPID,
 								processUsername,
 								processName,
 								processUseGPUMemory,
@@ -347,18 +371,25 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						table.AddRow(tableRow...)
 						table.SetAlign(termtables.AlignRight, 3)
 						table.SetAlign(termtables.AlignCenter, 4)
-						if show_processes {
+						if show_processes && show_detail {
 							table.SetAlign(termtables.AlignRight, 5)
-							// table.SetAlign(termtables.AlignRight, 7)
+							table.SetAlign(termtables.AlignRight, 7)
 							table.SetAlign(termtables.AlignRight, 8)
 							table.SetAlign(termtables.AlignRight, 9)
-							// table.SetAlign(termtables.AlignRight, 9)
+							table.SetAlign(termtables.AlignRight, 10)
+							table.SetAlign(termtables.AlignRight, 11)
+							table.SetAlign(termtables.AlignRight, 12)
+							table.SetAlign(termtables.AlignRight, 13)
 						}
 					}
 
 				} else {
 					if len(d.Processes) == 0 && useColor {
-						device_name = fmt.Sprintf("\033[0;32m%s\033[0m", device_name)
+						if useHTML {
+							device_name = fmt.Sprintf("<span style=\"color: green\">%s</span>", device_name)
+						} else {
+							device_name = fmt.Sprintf("\033[0;32m%s\033[0m", device_name)
+						}
 					}
 
 					tableRow := []interface{}{
@@ -366,6 +397,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						device_name,
 						device_MemoryInfo,
 						device_utilization,
+						cpu_utilization,
 					}
 
 					if show_detail {
@@ -401,7 +433,9 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 			table.AddSeparator()
 		}
 	}
-	fmt.Printf("\033[2J")
+	if !useHTML {
+		fmt.Printf("\033[2J")
+	}
 	// fmt.Printf("\033[0;30m color here \033[0m") // Black - Regular
 	// fmt.Printf("\033[0;31m color here \033[0m") // Red
 	// fmt.Printf("\033[0;32m color here \033[0m") // Green

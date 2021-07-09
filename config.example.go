@@ -17,6 +17,22 @@ type Config struct {
 	} `yaml:"ports"`
 }
 
+func ConfigFilePath() string {
+	configFilePath := "/usr/local/etc/cluster-smi.yml"
+	customPath := false
+	if os.Getenv("CLUSTER_SMI_CONFIG_PATH") != "" {
+		configFilePath = os.Getenv("CLUSTER_SMI_CONFIG_PATH")
+	}
+	_, err := os.Stat(configFilePath)
+	if err != nil {
+		if customPath {
+			log.Println("Config file %s not accessible", configFilePath)
+		}
+		configFilePath = ""
+	}
+	return configFilePath
+}
+
 func LoadConfig() Config {
 
 	c := Config{}
@@ -27,9 +43,8 @@ func LoadConfig() Config {
 	c.Ports.Nodes = "9080"
 	c.Ports.Clients = "9081"
 
-	if os.Getenv("CLUSTER_SMI_CONFIG_PATH") != "" {
-		fn := os.Getenv("CLUSTER_SMI_CONFIG_PATH")
-
+	fn := ConfigFilePath()
+	if fn != "" {
 		yamlFile, err := ioutil.ReadFile(fn)
 		if err != nil {
 			log.Fatalf("Error: %v ", err)
@@ -46,8 +61,9 @@ func LoadConfig() Config {
 
 func (c Config) Print() {
 
-	if os.Getenv("CLUSTER_SMI_CONFIG_PATH") != "" {
-		log.Println("Read configuration from", os.Getenv("CLUSTER_SMI_CONFIG_PATH"))
+	fn := ConfigFilePath()
+	if fn != "" {
+		log.Println("Read configuration from", fn)
 	} else {
 		log.Println("use default configuration")
 	}
