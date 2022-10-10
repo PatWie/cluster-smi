@@ -46,6 +46,7 @@ type Device struct {
 
 type Node struct {
 	Name       string    `json:"name"`       // hostname
+	Comment    string    `json:"comment"`    // host comment
 	Devices    []Device  `json:"devices"`    // devices
 	Time       time.Time `json:"time"`       // current timestamp from message
 	BootTime   int64     `json:"boot_time"`  // uptime of system
@@ -92,7 +93,7 @@ func FilterByUser(c Cluster, username string) Cluster {
 
 		if len(Devices) > 0 {
 			current_node := Node{
-				n.Name, Devices, n.Time, n.BootTime, n.ClockTicks, n.CPUUtil, n.LastRun, n.LastIdle,
+				n.Name, n.Comment, Devices, n.Time, n.BootTime, n.ClockTicks, n.CPUUtil, n.LastRun, n.LastIdle,
 			}
 			clus.Nodes = append(clus.Nodes, current_node)
 		}
@@ -220,7 +221,9 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 
 		timeout := now.Sub(n.Time).Seconds() > float64(timeout_threshold)
 		node_name := n.Name
+		host_comment := n.Comment
 		node_lastseen := n.Time.Format("Mon Jan 2 15:04:05 2006")
+		added_rows := 0
 
 		if timeout {
 
@@ -245,6 +248,11 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 			}
 
 			table.AddRow(tableRow...)
+			if host_comment != "" {
+				tableRow[0] = fmt.Sprintf("(%s)", host_comment)
+				tableRow[1] = ""
+				table.AddRow(tableRow...)
+			}
 			table.SetAlign(termtables.AlignRight, 3)
 
 			if show_processes {
@@ -298,6 +306,9 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 								device_PowerUtil = ""
 							}
 							cpu_utilization = ""
+						}
+						if added_rows == 1 && host_comment != "" {
+							node_name = fmt.Sprintf("(%s)", host_comment)
 						}
 
 						processName := p.Name
@@ -381,6 +392,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 							table.SetAlign(termtables.AlignRight, 12)
 							table.SetAlign(termtables.AlignRight, 13)
 						}
+						added_rows += 1
 					}
 
 				} else {
@@ -398,6 +410,9 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						device_MemoryInfo,
 						device_utilization,
 						cpu_utilization,
+					}
+					if added_rows == 1 && host_comment != "" {
+						tableRow[0] = fmt.Sprintf("(%s)", host_comment)
 					}
 
 					if show_detail {
@@ -423,6 +438,7 @@ func (c *Cluster) Print(show_processes bool, show_time bool, timeout_threshold i
 						table.SetAlign(termtables.AlignRight, 8)
 						table.SetAlign(termtables.AlignRight, 9)
 					}
+					added_rows += 1
 
 				}
 

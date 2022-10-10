@@ -5,10 +5,11 @@ import (
 	"github.com/patwie/cluster-smi/nvml"
 	"github.com/patwie/cluster-smi/proc"
 	linuxproc "github.com/c9s/goprocinfo/linux"
-	"fmt"
+	"net"
 	"os"
 	"os/user"
 	"strconv"
+	"strings"
 	"time"
 	"log"
 )
@@ -20,6 +21,20 @@ func FetchCluster(c *cluster.Cluster) {
 	}
 }
 
+// Get preferred outbound ip of this machine
+// https://stackoverflow.com/a/37382208
+func GetOutboundIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
+}
+
 // Node
 func InitNode(n *cluster.Node) {
 	name, err := os.Hostname()
@@ -27,11 +42,9 @@ func InitNode(n *cluster.Node) {
 		panic(err)
 	}
 	host_comment := os.Getenv("HOST_COMMENT")
-	if host_comment != "" {
-		n.Name = fmt.Sprintf("%s (%s)", name, host_comment)
-	} else {
-		n.Name = name
-	}
+	host_comment = strings.Replace(host_comment, "%IP%", GetOutboundIP().String(), -1)
+	n.Name = name
+	n.Comment = host_comment
 	n.Time = time.Now()
 
 	boot_time, _ := proc.BootTime()
