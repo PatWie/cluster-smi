@@ -4,10 +4,14 @@ import (
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/patwie/cluster-smi/nvml"
 	"github.com/patwie/cluster-smi/proc"
+	linuxproc "github.com/c9s/goprocinfo/linux"
+	"net"
 	"os"
 	"os/user"
 	"strconv"
+	"strings"
 	"time"
+	"log"
 )
 
 // Cluster
@@ -17,13 +21,30 @@ func FetchCluster(c *cluster.Cluster) {
 	}
 }
 
+// Get preferred outbound ip of this machine
+// https://stackoverflow.com/a/37382208
+func GetOutboundIP() net.IP {
+	conn, err := net.Dial("udp", "8.8.8.8:80")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer conn.Close()
+
+	localAddr := conn.LocalAddr().(*net.UDPAddr)
+
+	return localAddr.IP
+}
+
 // Node
 func InitNode(n *cluster.Node) {
 	name, err := os.Hostname()
 	if err != nil {
 		panic(err)
 	}
+	host_comment := os.Getenv("HOST_COMMENT")
+	host_comment = strings.Replace(host_comment, "%IP%", GetOutboundIP().String(), -1)
 	n.Name = name
+	n.Comment = host_comment
 	n.Time = time.Now()
 
 	boot_time, _ := proc.BootTime()
@@ -104,4 +125,15 @@ func FetchNode(n *cluster.Node) {
 		n.Devices[idx].Processes = processes
 
 	}
+
+	stat, err := linuxproc.ReadStat("/proc/stat")
+	if err != nil {
+		log.Fatal("stat read fail")
+	}
+
+	statAll := stat.CPUStatAll
+	n.CPUUtil = float32(statAll.User + statAll.System - n.LastRun) / float32(statAll.User + statAll.System + statAll.Idle - n.LastRun - n.LastIdle)
+	//log.Println("Fetch /proc/stat", statAll.User, statAll.System, statAll.Idle)
+	n.LastRun = statAll.User + statAll.System
+	n.LastIdle = statAll.Idle
 }

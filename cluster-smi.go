@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/patwie/cluster-smi/cluster"
 	"github.com/pebbe/zmq4"
-	"github.com/vmihailenco/msgpack"
+	"github.com/vmihailenco/msgpack/v5"
 	"log"
 	"os"
 	"time"
@@ -32,6 +32,7 @@ func main() {
 		"(if not specified, all nodes will be shown)")
 	usernameFilter := flag.String("u", "", "show all information only for specific user")
 	useColor := flag.Bool("color", true, "use colored output")
+	useHTML := flag.Bool("html", false, "use HTML output")
 	flag.Parse()
 
 	request_attempts := 0
@@ -86,8 +87,12 @@ func main() {
 
 		clus.Sort()
 		clus.FilterNodes(*nodeRegex)
-		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor, *showExtendedPtr, *showDetailPtr)
-		time.Sleep(time.Duration(cfg.Tick) * time.Second)
+		clus.Print(*showProcessesPtr, *showTimePtr, cfg.Timeout, *useColor, *useHTML, *showExtendedPtr, *showDetailPtr)
+		if *useHTML {
+			break
+		} else {
+			time.Sleep(time.Duration(cfg.Tick) * time.Second)
+		}
 	}
 
 }
